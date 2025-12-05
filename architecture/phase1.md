@@ -1,0 +1,1941 @@
+# **PHASE 1: AUTHENTICATION & LIVEKIT FOUNDATION**
+
+## **High-Level Overview**
+
+**Objective**: Implement secure JWT-based authentication and establish LiveKit infrastructure for voice communication. This phase bridges the foundation from Phase 0 with the voice AI capabilities needed for Phase 2.
+
+**Focus Areas**:
+- JWT-based authentication with email verification
+- Protected routes and authorization middleware
+- LiveKit Cloud setup and token generation
+- Basic LiveKit room management
+- Frontend authentication UI and state management
+- LiveKit React components integration
+
+**Key Architectural Decision**: Authentication comes before voice features because LiveKit rooms must be associated with authenticated users, and all interview sessions require user identity.
+
+***
+
+## **PROMPT 1: BACKEND ENGINEER (Authentication & LiveKit Services)**
+
+### **Objective**
+Implement complete authentication system with JWT tokens, password hashing, and email verification. Set up LiveKit integration for token generation and room management. **No AI integration yet** - focus on secure auth and LiveKit infrastructure.
+
+### **Project Context**
+You're building the authentication layer and LiveKit integration for a voice-based AI interview platform. Users must authenticate before starting interviews. Each interview session requires a LiveKit room with proper access tokens. The LiveKit Agent (Python) will be implemented in Phase 2.
+
+### **Required Technologies**
+- **Auth**: bcrypt for password hashing, @nestjs/jwt for token generation, @nestjs/passport with JWT strategy
+- **LiveKit**: livekit-server-sdk for token generation and room management
+- **Validation**: class-validator, class-transformer for DTO validation
+- **Email**: @nestjs-modules/mailer (optional for Phase 1, can use console logging)
+
+***
+
+### **TASK 1: Install Dependencies**
+
+```bash
+npm install @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt
+npm install livekit-server-sdk
+npm install @types/passport-jwt @types/bcrypt --save-dev
+```
+
+***
+
+### **TASK 2: Environment Configuration**
+
+Update `.env.example` and `.env`:
+```env
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-min-256-bits
+JWT_EXPIRATION=24h
+JWT_REFRESH_SECRET=your-refresh-token-secret
+JWT_REFRESH_EXPIRATION=7d
+
+# LiveKit Configuration
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your-api-key
+LIVEKIT_API_SECRET=your-api-secret
+
+# Application
+FRONTEND_URL=http://localhost:3001
+```
+
+Update `config/app.config.ts` validation schema:
+```typescript
+validationSchema: Joi.object({
+  // ... existing validation
+  JWT_SECRET: Joi.string().min(32).required(),
+  JWT_EXPIRATION: Joi.string().default('24h'),
+  JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+  JWT_REFRESH_EXPIRATION: Joi.string().default('7d'),
+  LIVEKIT_URL: Joi.string().uri().required(),
+  LIVEKIT_API_KEY: Joi.string().required(),
+  LIVEKIT_API_SECRET: Joi.string().required(),
+  FRONTEND_URL: Joi.string().uri().required()
+})
+```
+
+***
+
+### **TASK 3: Create Auth Module Structure**
+
+```
+/apps/backend/src
+  /auth
+    /dto
+      register.dto.ts
+      login.dto.ts
+      refresh-token.dto.ts
+    /guards
+      jwt-auth.guard.ts
+      jwt-refresh.guard.ts
+    /strategies
+      jwt.strategy.ts
+      jwt-refresh.strategy.ts
+    /decorators
+      public.decorator.ts
+      current-user.decorator.ts
+    auth.controller.ts
+    auth.service.ts
+    auth.module.ts
+  /users
+    users.service.ts
+    users.module.ts
+  /livekit
+    /dto
+      create-room.dto.ts
+      get-token.dto.ts
+    livekit.service.ts
+    livekit.controller.ts
+    livekit.module.ts
+```
+
+***
+
+### **TASK 4: Implement DTOs with Validation**
+
+**auth/dto/register.dto.ts**:
+```typescript
+import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class RegisterDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: 'SecurePass123!', minLength: 8 })
+  @IsString()
+  @MinLength(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'Password must contain uppercase, lowercase, and number/special character'
+  })
+  password: string;
+}
+```
+
+**auth/dto/login.dto.ts**:
+```typescript
+import { IsEmail, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class LoginDto {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  password: string;
+}
+```
+
+**auth/dto/refresh-token.dto.ts**:
+```typescript
+import { IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class RefreshTokenDto {
+  @ApiProperty()
+  @IsString()
+  refreshToken: string;
+}
+```
+
+***
+
+### **TASK 5: Implement Users Service**
+
+**users/users.service.ts**:
+```typescript
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../database/entities/user.entity';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>
+  ) {}
+
+  async create(email: string, password: string): Promise<User> {
+    // Check if user exists
+    const existingUser = await this.usersRepository.findOne({ where: { email } });
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
+    }
+
+    // Hash password (10 rounds)
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = this.usersRepository.create({
+      email,
+      password_hash,
+      email_verified: false, // Will implement verification later
+      verification_token: null // Generate token if email verification is implemented
+    });
+
+    return this.usersRepository.save(user);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async validatePassword(user: User, password: string): Promise<boolean> {
+    return bcrypt.compare(password, user.password_hash);
+  }
+
+  async updateLastLogin(userId: string): Promise<void> {
+    await this.usersRepository.update(userId, { last_login: new Date() });
+  }
+}
+```
+
+**users/users.module.ts**:
+```typescript
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../database/entities/user.entity';
+import { UsersService } from './users.service';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [UsersService],
+  exports: [UsersService]
+})
+export class UsersModule {}
+```
+
+***
+
+### **TASK 6: Implement Auth Service**
+
+**auth/auth.service.ts**:
+```typescript
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../users/users.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+
+export interface JwtPayload {
+  sub: string; // user ID
+  email: string;
+}
+
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+}
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+    private configService: ConfigService
+  ) {}
+
+  async register(registerDto: RegisterDto): Promise<{ user: any; tokens: AuthTokens }> {
+    const user = await this.usersService.create(registerDto.email, registerDto.password);
+    const tokens = await this.generateTokens(user.id, user.email);
+
+    // Remove sensitive data
+    const { password_hash, ...userWithoutPassword } = user;
+
+    return { user: userWithoutPassword, tokens };
+  }
+
+  async login(loginDto: LoginDto): Promise<{ user: any; tokens: AuthTokens }> {
+    const user = await this.usersService.findByEmail(loginDto.email);
+    
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await this.usersService.validatePassword(user, loginDto.password);
+    
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Update last login
+    await this.usersService.updateLastLogin(user.id);
+
+    const tokens = await this.generateTokens(user.id, user.email);
+
+    // Remove sensitive data
+    const { password_hash, ...userWithoutPassword } = user;
+
+    return { user: userWithoutPassword, tokens };
+  }
+
+  async refreshTokens(userId: string): Promise<AuthTokens> {
+    const user = await this.usersService.findById(userId);
+    
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return this.generateTokens(user.id, user.email);
+  }
+
+  async validateUser(userId: string): Promise<any> {
+    const user = await this.usersService.findById(userId);
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
+    const payload: JwtPayload = { sub: userId, email };
+
+    const [access_token, refresh_token] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get('JWT_SECRET'),
+        expiresIn: this.configService.get('JWT_EXPIRATION')
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION')
+      })
+    ]);
+
+    return { access_token, refresh_token };
+  }
+}
+```
+
+***
+
+### **TASK 7: Implement JWT Strategies**
+
+**auth/strategies/jwt.strategy.ts**:
+```typescript
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
+import { AuthService, JwtPayload } from '../auth.service';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  constructor(
+    private configService: ConfigService,
+    private authService: AuthService
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get('JWT_SECRET')
+    });
+  }
+
+  async validate(payload: JwtPayload) {
+    const user = await this.authService.validateUser(payload.sub);
+    
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return user; // Attached to request.user
+  }
+}
+```
+
+**auth/strategies/jwt-refresh.strategy.ts**:
+```typescript
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from '../auth.service';
+
+@Injectable()
+export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+  constructor(private configService: ConfigService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
+      ignoreExpiration: false,
+      secretOrKey: configService.get('JWT_REFRESH_SECRET')
+    });
+  }
+
+  async validate(payload: JwtPayload) {
+    return { userId: payload.sub, email: payload.email };
+  }
+}
+```
+
+***
+
+### **TASK 8: Implement Guards and Decorators**
+
+**auth/guards/jwt-auth.guard.ts**:
+```typescript
+import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private reflector: Reflector) {
+    super();
+  }
+
+  canActivate(context: ExecutionContext) {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass()
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
+    return super.canActivate(context);
+  }
+}
+```
+
+**auth/guards/jwt-refresh.guard.ts**:
+```typescript
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {}
+```
+
+**auth/decorators/public.decorator.ts**:
+```typescript
+import { SetMetadata } from '@nestjs/common';
+
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+```
+
+**auth/decorators/current-user.decorator.ts**:
+```typescript
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
+export const CurrentUser = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  }
+);
+```
+
+***
+
+### **TASK 9: Implement Auth Controller**
+
+**auth/auth.controller.ts**:
+```typescript
+import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+
+@ApiTags('Authentication')
+@Controller('auth')
+export class AuthController {
+  constructor(private authService: AuthService) {}
+
+  @Public()
+  @Post('register')
+  @ApiOperation({ summary: 'Register new user' })
+  async register(@Body() registerDto: RegisterDto) {
+    const result = await this.authService.register(registerDto);
+    return {
+      success: true,
+      data: result
+    };
+  }
+
+  @Public()
+  @Post('login')
+  @ApiOperation({ summary: 'Login user' })
+  async login(@Body() loginDto: LoginDto) {
+    const result = await this.authService.login(loginDto);
+    return {
+      success: true,
+      data: result
+    };
+  }
+
+  @Public()
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @CurrentUser() user: any) {
+    const tokens = await this.authService.refreshTokens(user.userId);
+    return {
+      success: true,
+      data: tokens
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('me')
+  @ApiOperation({ summary: 'Get current user profile' })
+  async getProfile(@CurrentUser() user: any) {
+    return {
+      success: true,
+      data: user
+    };
+  }
+}
+```
+
+***
+
+### **TASK 10: Configure Auth Module**
+
+**auth/auth.module.ts**:
+```typescript
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { UsersModule } from '../users/users.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+
+@Module({
+  imports: [
+    UsersModule,
+    PassportModule,
+    JwtModule.register({}) // Configuration done in strategies
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
+  exports: [AuthService]
+})
+export class AuthModule {}
+```
+
+***
+
+### **TASK 11: Apply Global JWT Guard**
+
+Update `main.ts`:
+```typescript
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { Reflector } from '@nestjs/core';
+
+async function bootstrap() {
+  const app = await NestApplication.create(AppModule);
+  
+  // ... existing middleware
+  
+  // Global JWT guard
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
+  
+  await app.listen(3000);
+}
+```
+
+***
+
+### **TASK 12: Implement LiveKit Service**
+
+**livekit/livekit.service.ts**:
+```typescript
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AccessToken, RoomServiceClient, Room } from 'livekit-server-sdk';
+
+export interface LiveKitTokenOptions {
+  roomName: string;
+  participantName: string;
+  participantId: string;
+}
+
+@Injectable()
+export class LiveKitService {
+  private roomService: RoomServiceClient;
+  private apiKey: string;
+  private apiSecret: string;
+  private livekitUrl: string;
+
+  constructor(private configService: ConfigService) {
+    this.apiKey = this.configService.get('LIVEKIT_API_KEY');
+    this.apiSecret = this.configService.get('LIVEKIT_API_SECRET');
+    this.livekitUrl = this.configService.get('LIVEKIT_URL');
+
+    this.roomService = new RoomServiceClient(
+      this.livekitUrl,
+      this.apiKey,
+      this.apiSecret
+    );
+  }
+
+  async generateToken(options: LiveKitTokenOptions): Promise<string> {
+    const token = new AccessToken(this.apiKey, this.apiSecret, {
+      identity: options.participantId,
+      name: options.participantName,
+      ttl: '1h' // Token valid for 1 hour
+    });
+
+    token.addGrant({
+      roomJoin: true,
+      room: options.roomName,
+      canPublish: true,
+      canSubscribe: true
+    });
+
+    return token.toJwt();
+  }
+
+  async createRoom(roomName: string, emptyTimeout: number = 300): Promise<Room> {
+    try {
+      const room = await this.roomService.createRoom({
+        name: roomName,
+        emptyTimeout: emptyTimeout, // 5 minutes
+        maxParticipants: 2 // User + Agent
+      });
+
+      return room;
+    } catch (error) {
+      throw new BadRequestException(`Failed to create room: ${error.message}`);
+    }
+  }
+
+  async deleteRoom(roomName: string): Promise<void> {
+    try {
+      await this.roomService.deleteRoom(roomName);
+    } catch (error) {
+      // Room might not exist, log but don't throw
+      console.error(`Failed to delete room ${roomName}:`, error.message);
+    }
+  }
+
+  async listRooms(): Promise<Room[]> {
+    const rooms = await this.roomService.listRooms();
+    return rooms;
+  }
+
+  async getRoomInfo(roomName: string): Promise<Room | null> {
+    try {
+      const rooms = await this.roomService.listRooms([roomName]);
+      return rooms.length > 0 ? rooms[0] : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  getLiveKitUrl(): string {
+    return this.livekitUrl;
+  }
+}
+```
+
+***
+
+### **TASK 13: Implement LiveKit DTOs**
+
+**livekit/dto/create-room.dto.ts**:
+```typescript
+import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class CreateRoomDto {
+  @ApiProperty({ example: 'interview-123' })
+  @IsString()
+  roomName: string;
+
+  @ApiProperty({ example: 300, description: 'Empty timeout in seconds', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(60)
+  @Max(3600)
+  emptyTimeout?: number;
+}
+```
+
+**livekit/dto/get-token.dto.ts**:
+```typescript
+import { IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class GetTokenDto {
+  @ApiProperty({ example: 'interview-123' })
+  @IsString()
+  roomName: string;
+}
+```
+
+***
+
+### **TASK 14: Implement LiveKit Controller**
+
+**livekit/livekit.controller.ts**:
+```typescript
+import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { LiveKitService } from './livekit.service';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { GetTokenDto } from './dto/get-token.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+
+@ApiTags('LiveKit')
+@ApiBearerAuth()
+@Controller('livekit')
+export class LiveKitController {
+  constructor(private livekitService: LiveKitService) {}
+
+  @Post('token')
+  @ApiOperation({ summary: 'Generate LiveKit access token' })
+  async getToken(@Body() getTokenDto: GetTokenDto, @CurrentUser() user: any) {
+    const token = await this.livekitService.generateToken({
+      roomName: getTokenDto.roomName,
+      participantName: user.email,
+      participantId: user.id
+    });
+
+    return {
+      success: true,
+      data: {
+        token,
+        url: this.livekitService.getLiveKitUrl()
+      }
+    };
+  }
+
+  @Post('rooms')
+  @ApiOperation({ summary: 'Create LiveKit room' })
+  async createRoom(@Body() createRoomDto: CreateRoomDto) {
+    const room = await this.livekitService.createRoom(
+      createRoomDto.roomName,
+      createRoomDto.emptyTimeout
+    );
+
+    return {
+      success: true,
+      data: room
+    };
+  }
+
+  @Get('rooms')
+  @ApiOperation({ summary: 'List all active rooms' })
+  async listRooms() {
+    const rooms = await this.livekitService.listRooms();
+
+    return {
+      success: true,
+      data: rooms
+    };
+  }
+
+  @Get('rooms/:roomName')
+  @ApiOperation({ summary: 'Get room information' })
+  async getRoomInfo(@Param('roomName') roomName: string) {
+    const room = await this.livekitService.getRoomInfo(roomName);
+
+    return {
+      success: true,
+      data: room
+    };
+  }
+
+  @Delete('rooms/:roomName')
+  @ApiOperation({ summary: 'Delete LiveKit room' })
+  async deleteRoom(@Param('roomName') roomName: string) {
+    await this.livekitService.deleteRoom(roomName);
+
+    return {
+      success: true,
+      message: `Room ${roomName} deleted`
+    };
+  }
+}
+```
+
+***
+
+### **TASK 15: Configure LiveKit Module**
+
+**livekit/livekit.module.ts**:
+```typescript
+import { Module } from '@nestjs/common';
+import { LiveKitService } from './livekit.service';
+import { LiveKitController } from './livekit.controller';
+
+@Module({
+  providers: [LiveKitService],
+  controllers: [LiveKitController],
+  exports: [LiveKitService]
+})
+export class LiveKitModule {}
+```
+
+Update `app.module.ts`:
+```typescript
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { LiveKitModule } from './livekit/livekit.module';
+
+@Module({
+  imports: [
+    // ... existing imports
+    AuthModule,
+    UsersModule,
+    LiveKitModule
+  ]
+})
+```
+
+***
+
+### **TASK 16: Add Rate Limiting (Optional but Recommended)**
+
+```bash
+npm install @nestjs/throttler
+```
+
+Update `app.module.ts`:
+```typescript
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 10 // 10 requests per minute
+    }]),
+    // ... other imports
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    }
+  ]
+})
+```
+
+Apply stricter rate limiting to auth endpoints in controller:
+```typescript
+import { Throttle } from '@nestjs/throttler';
+
+@Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 requests per 15 minutes
+@Post('login')
+```
+
+***
+
+### **Deliverables**
+
+✓ JWT-based authentication with access and refresh tokens
+✓ User registration with password hashing (bcrypt 10 rounds)
+✓ Login with credential validation
+✓ Token refresh mechanism
+✓ Protected routes with @Public() decorator
+✓ CurrentUser decorator for extracting user from JWT
+✓ LiveKit token generation for authenticated users
+✓ LiveKit room creation, listing, and deletion
+✓ Rate limiting on auth endpoints
+✓ Swagger documentation for all endpoints
+
+***
+
+### **Acceptance Criteria**
+
+✓ POST `/auth/register` creates user and returns tokens
+✓ POST `/auth/login` validates credentials and returns tokens
+✓ POST `/auth/refresh` generates new access token from refresh token
+✓ GET `/auth/me` returns current user with valid JWT
+✓ POST `/livekit/token` generates valid LiveKit token
+✓ POST `/livekit/rooms` creates LiveKit room
+✓ All protected routes return 401 without valid JWT
+✓ Password validation enforces complexity rules
+✓ Duplicate email registration returns 409 Conflict
+✓ Unit tests cover >80% of auth and LiveKit services
+✓ Invalid JWT returns 401 with clear error message
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# **PHASE 1: AUTHENTICATION & LIVEKIT FOUNDATION**
+
+## **High-Level Overview**
+
+**Objective**: Implement secure JWT-based authentication and establish LiveKit infrastructure for voice communication. This phase bridges the foundation from Phase 0 with the voice AI capabilities needed for Phase 2.
+
+**Focus Areas**:
+- JWT-based authentication with email verification
+- Protected routes and authorization middleware
+- LiveKit Cloud setup and token generation
+- Basic LiveKit room management
+- Frontend authentication UI and state management
+- LiveKit React components integration
+
+**Key Architectural Decision**: Authentication comes before voice features because LiveKit rooms must be associated with authenticated users, and all interview sessions require user identity.
+
+***
+
+## **PROMPT 2: FRONTEND ENGINEER (Authentication UI & LiveKit Components)**
+
+### **Objective**
+Implement complete authentication UI with registration, login, and protected routes. Integrate LiveKit React components for voice communication. Set up state management for auth and prepare for interview sessions.
+
+### **Project Context**
+You're building the client-side authentication and LiveKit integration for a voice-based AI interview platform. Users must register/login before accessing interview features. The interview session will use LiveKit React components for voice communication with the AI agent (implemented in Phase 2).
+
+### **Required Technologies**
+- **State Management**: Zustand for global state
+- **Forms**: React Hook Form with Zod validation
+- **LiveKit**: @livekit/components-react for voice UI
+- **Routing**: Next.js App Router with middleware for protected routes
+- **UI**: TailwindCSS + shadcn/ui components
+
+***
+
+### **TASK 1: Install Dependencies**
+
+```bash
+npm install zustand
+npm install react-hook-form @hookform/resolvers zod
+npm install @livekit/components-react livekit-client
+npm install js-cookie
+npm install @types/js-cookie --save-dev
+```
+
+***
+
+### **TASK 2: Create Shared Types**
+
+**types/auth.types.ts**:
+```typescript
+export interface User {
+  id: string;
+  email: string;
+  email_verified: boolean;
+  created_at: string;
+  last_login: string | null;
+}
+
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+}
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  data: {
+    user: User;
+    tokens: AuthTokens;
+  };
+}
+```
+
+**types/livekit.types.ts**:
+```typescript
+export interface LiveKitToken {
+  token: string;
+  url: string;
+}
+
+export interface LiveKitTokenResponse {
+  success: boolean;
+  data: LiveKitToken;
+}
+```
+
+***
+
+### **TASK 3: Configure API Client with Auth Interceptors**
+
+Update **lib/api-client.ts**:
+```typescript
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import Cookies from 'js-cookie';
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Request interceptor - Add JWT token to requests
+apiClient.interceptors.request.use(
+  (config: InternalAxesRequestConfig) => {
+    const token = Cookies.get('access_token');
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - Handle 401 and token refresh
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // If 401 and not already retrying, attempt token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = Cookies.get('refresh_token');
+        
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        // Refresh token
+        const { data } = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+          { refreshToken }
+        );
+
+        const { access_token, refresh_token } = data.data;
+
+        // Update cookies
+        Cookies.set('access_token', access_token, { expires: 1 }); // 1 day
+        Cookies.set('refresh_token', refresh_token, { expires: 7 }); // 7 days
+
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, clear tokens and redirect to login
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+```
+
+***
+
+### **TASK 4: Create Auth Service**
+
+**lib/auth.service.ts**:
+```typescript
+import { apiClient } from './api-client';
+import Cookies from 'js-cookie';
+import type { 
+  RegisterPayload, 
+  LoginPayload, 
+  AuthResponse, 
+  User 
+} from '@/types/auth.types';
+
+export class AuthService {
+  static async register(payload: RegisterPayload): Promise<{ user: User; tokens: any }> {
+    const { data } = await apiClient.post<AuthResponse>('/auth/register', payload);
+    
+    // Store tokens in cookies
+    Cookies.set('access_token', data.data.tokens.access_token, { expires: 1 });
+    Cookies.set('refresh_token', data.data.tokens.refresh_token, { expires: 7 });
+    
+    return data.data;
+  }
+
+  static async login(payload: LoginPayload): Promise<{ user: User; tokens: any }> {
+    const { data } = await apiClient.post<AuthResponse>('/auth/login', payload);
+    
+    // Store tokens in cookies
+    Cookies.set('access_token', data.data.tokens.access_token, { expires: 1 });
+    Cookies.set('refresh_token', data.data.tokens.refresh_token, { expires: 7 });
+    
+    return data.data;
+  }
+
+  static async logout(): Promise<void> {
+    // Clear tokens from cookies
+    Cookies.remove('access_token');
+    Cookies.remove('refresh_token');
+  }
+
+  static async getCurrentUser(): Promise<User> {
+    const { data } = await apiClient.get('/auth/me');
+    return data.data;
+  }
+
+  static isAuthenticated(): boolean {
+    return !!Cookies.get('access_token');
+  }
+
+  static getAccessToken(): string | undefined {
+    return Cookies.get('access_token');
+  }
+}
+```
+
+***
+
+### **TASK 5: Create LiveKit Service**
+
+**lib/livekit.service.ts**:
+```typescript
+import { apiClient } from './api-client';
+import type { LiveKitTokenResponse } from '@/types/livekit.types';
+
+export class LiveKitService {
+  static async getToken(roomName: string): Promise<{ token: string; url: string }> {
+    const { data } = await apiClient.post<LiveKitTokenResponse>('/livekit/token', {
+      roomName
+    });
+    
+    return data.data;
+  }
+
+  static async createRoom(roomName: string, emptyTimeout?: number): Promise<any> {
+    const { data } = await apiClient.post('/livekit/rooms', {
+      roomName,
+      emptyTimeout
+    });
+    
+    return data.data;
+  }
+
+  static async deleteRoom(roomName: string): Promise<void> {
+    await apiClient.delete(`/livekit/rooms/${roomName}`);
+  }
+}
+```
+
+***
+
+### **TASK 6: Create Auth Store with Zustand**
+
+**store/auth.store.ts**:
+```typescript
+import { create } from 'zustand';
+import { AuthService } from '@/lib/auth.service';
+import type { User, RegisterPayload, LoginPayload } from '@/types/auth.types';
+
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  register: (payload: RegisterPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+  clearError: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+
+  register: async (payload) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const { user } = await AuthService.register(payload);
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error?.message || 'Registration failed';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  login: async (payload) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const { user } = await AuthService.login(payload);
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error?.message || 'Login failed';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    await AuthService.logout();
+    set({ user: null, isAuthenticated: false, error: null });
+  },
+
+  checkAuth: async () => {
+    if (!AuthService.isAuthenticated()) {
+      set({ isAuthenticated: false, user: null });
+      return;
+    }
+
+    set({ isLoading: true });
+    
+    try {
+      const user = await AuthService.getCurrentUser();
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      await AuthService.logout();
+      set({ user: null, isAuthenticated: false, isLoading: false });
+    }
+  },
+
+  clearError: () => set({ error: null })
+}));
+```
+
+***
+
+### **TASK 7: Create Form Validation Schemas**
+
+**lib/validations/auth.schema.ts**:
+```typescript
+import { z } from 'zod';
+
+export const registerSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W])/,
+      'Password must contain uppercase, lowercase, and number/special character'
+    ),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword']
+});
+
+export const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required')
+});
+
+export type RegisterFormData = z.infer<typeof registerSchema>;
+export type LoginFormData = z.infer<typeof loginSchema>;
+```
+
+***
+
+### **TASK 8: Create Auth UI Components**
+
+**app/register/page.tsx**:
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuthStore } from '@/store/auth.store';
+import { registerSchema, type RegisterFormData } from '@/lib/validations/auth.schema';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const { register: registerUser, error, clearError } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema)
+  });
+
+  const onSubmit = async (data: RegisterFormData) => {
+    clearError();
+    
+    try {
+      await registerUser({
+        email: data.email,
+        password: data.password
+      });
+      
+      router.push('/dashboard');
+    } catch (err) {
+      // Error handled by store
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <Card className="w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
+          <p className="text-gray-600 mt-2">Start your interview journey</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              {...register('email')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="you@example.com"
+            />
+            {errors.email && (
+              <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                {...register('password')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              {...register('confirmPassword')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="••••••••"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-600 text-sm mt-1">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Creating account...' : 'Create Account'}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-gray-600 mt-6">
+          Already have an account?{' '}
+          <Link href="/login" className="text-primary font-medium hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </Card>
+    </div>
+  );
+}
+```
+
+**app/login/page.tsx**:
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuthStore } from '@/store/auth.store';
+import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { login, error, clearError } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema)
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    clearError();
+    
+    try {
+      await login(data);
+      router.push('/dashboard');
+    } catch (err) {
+      // Error handled by store
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <Card className="w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
+          <p className="text-gray-600 mt-2">Sign in to continue your interviews</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              {...register('email')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="you@example.com"
+            />
+            {errors.email && (
+              <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                {...register('password')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-gray-600 mt-6">
+          Don't have an account?{' '}
+          <Link href="/register" className="text-primary font-medium hover:underline">
+            Create one
+          </Link>
+        </p>
+      </Card>
+    </div>
+  );
+}
+```
+
+***
+
+### **TASK 9: Create Protected Route Component**
+
+**components/auth/protected-route.tsx**:
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth.store';
+
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+```
+
+***
+
+### **TASK 10: Create Basic Dashboard Page**
+
+**app/dashboard/page.tsx**:
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth.store';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+function DashboardContent() {
+  const { user, logout } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">Interview Dashboard</h1>
+            <Button onClick={handleLogout} variant="outline">
+              Logout
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-2">Welcome, {user?.email}</h2>
+          <p className="text-gray-600">Ready to start your AI interview?</p>
+        </Card>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-2">Total Interviews</h3>
+            <p className="text-3xl font-bold text-primary">0</p>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-2">Average Score</h3>
+            <p className="text-3xl font-bold text-primary">-</p>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-2">Completed</h3>
+            <p className="text-3xl font-bold text-primary">0</p>
+          </Card>
+        </div>
+
+        <div className="mt-8">
+          <Button size="lg">
+            Start New Interview (Coming in Phase 2)
+          </Button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
+  );
+}
+```
+
+***
+
+### **TASK 11: Update Landing Page**
+
+**app/page.tsx**:
+```typescript
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">AI Interview Platform</h1>
+            <div className="space-x-4">
+              <Link href="/login">
+                <Button variant="outline">Sign In</Button>
+              </Link>
+              <Link href="/register">
+                <Button>Get Started</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-5xl font-bold text-gray-900 mb-6">
+            Practice Interviews with AI
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Improve your interview skills with our voice-based AI interviewer.
+            Get real-time feedback and detailed performance reports.
+          </p>
+          <Link href="/register">
+            <Button size="lg" className="text-lg px-8 py-6">
+              Start Your First Interview
+            </Button>
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+}
+```
+
+***
+
+### **TASK 12: Create LiveKit Test Page (For Phase 2)**
+
+**app/test-livekit/page.tsx**:
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { LiveKitRoom } from '@livekit/components-react';
+import { LiveKitService } from '@/lib/livekit.service';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import '@livekit/components-styles';
+
+function LiveKitTestContent() {
+  const [roomName, setRoomName] = useState('');
+  const [token, setToken] = useState('');
+  const [serverUrl, setServerUrl] = useState('');
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleConnect = async () => {
+    if (!roomName) {
+      alert('Please enter a room name');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { token: livekitToken, url } = await LiveKitService.getToken(roomName);
+      setToken(livekitToken);
+      setServerUrl(url);
+      setConnected(true);
+    } catch (error: any) {
+      alert(`Failed to connect: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisconnect = () => {
+    setConnected(false);
+    setToken('');
+    setServerUrl('');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <Card className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6">LiveKit Connection Test</h1>
+
+        {!connected ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Room Name</label>
+              <input
+                type="text"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                className="w-full px-4 py-2 border rounded-md"
+                placeholder="test-room-123"
+              />
+            </div>
+
+            <Button onClick={handleConnect} disabled={loading}>
+              {loading ? 'Connecting...' : 'Connect to Room'}
+            </Button>
+          </div>
+        ) : (
+          <div>
+            <div className="mb-4">
+              <p className="text-green-600 font-medium">Connected to: {roomName}</p>
+              <Button onClick={handleDisconnect} variant="outline" className="mt-2">
+                Disconnect
+              </Button>
+            </div>
+
+            <LiveKitRoom
+              token={token}
+              serverUrl={serverUrl}
+              connect={true}
+              audio={true}
+              video={false}
+              className="h-96"
+            >
+              <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
+                <p className="text-gray-600">LiveKit Room Connected (Audio Only)</p>
+              </div>
+            </LiveKitRoom>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+export default function LiveKitTestPage() {
+  return (
+    <ProtectedRoute>
+      <LiveKitTestContent />
+    </ProtectedRoute>
+  );
+}
+```
+
+***
+
+### **Deliverables**
+
+✓ Registration page with form validation
+✓ Login page with credential validation
+✓ Protected dashboard with user profile
+✓ Auth state management with Zustand
+✓ API client with JWT interceptors and token refresh
+✓ Cookie-based token storage (HttpOnly recommended for production)
+✓ LiveKit service for token generation
+✓ LiveKit test page for connection verification
+✓ Responsive UI with TailwindCSS
+✓ Error handling and user feedback
+
+***
+
+### **Acceptance Criteria**
+
+✓ User can register with valid email/password
+✓ User can login with credentials
+✓ Invalid credentials show error message
+✓ Protected routes redirect to login when unauthenticated
+✓ Dashboard displays user email
+✓ Logout clears tokens and redirects to login
+✓ Token refresh works automatically on 401
+✓ LiveKit test page generates valid token
+✓ Form validation displays helpful error messages
+✓ No TypeScript errors
+✓ Responsive design works on mobile and desktop
+
+***
+
+## **PHASE 1 INTEGRATION VERIFICATION**
+
+### **Complete Checklist:**
+
+**Backend Verification:**
+- [ ] POST `/auth/register` creates user successfully
+- [ ] POST `/auth/login` returns valid JWT tokens
+- [ ] POST `/auth/refresh` generates new access token
+- [ ] GET `/auth/me` returns current user with valid JWT
+- [ ] Protected routes return 401 without JWT
+- [ ] POST `/livekit/token` generates valid LiveKit token
+- [ ] POST `/livekit/rooms` creates LiveKit room
+- [ ] Password hashing with bcrypt works
+- [ ] Rate limiting enforced on auth endpoints
+- [ ] Swagger docs updated and accessible
+
+**Frontend Verification:**
+- [ ] Registration form validates input
+- [ ] Login form authenticates user
+- [ ] Dashboard displays after successful login
+- [ ] Logout clears auth state
+- [ ] Protected routes redirect to login
+- [ ] Token refresh works automatically
+- [ ] LiveKit test page connects to room
+- [ ] Error messages display correctly
+- [ ] Responsive design functional
+- [ ] No console errors
+
+**Integration Testing:**
+- [ ] Register → Login → Dashboard flow works
+- [ ] Token expiration triggers refresh
+- [ ] Invalid tokens rejected by backend
+- [ ] LiveKit token generation for authenticated users
+- [ ] Frontend can create and connect to LiveKit rooms
+- [ ] Room cleanup after disconnect
+
+***
+
+## **What's NOT in Phase 1**
+
+- ❌ Email verification (can be added later)
+- ❌ Password reset functionality
+- ❌ Interview creation/management (Phase 2)
+- ❌ Question generation (Phase 2)
+- ❌ LiveKit Python Agent (Phase 2)
+- ❌ Gemini AI integration (Phase 2)
+- ❌ Answer evaluation (Phase 2)
+- ❌ Interview reports (Phase 3)
+- ❌ Social authentication (future)
+- ❌ Advanced rate limiting with Redis (Phase 4)
+
+***
+
+## **Next Steps for Phase 2**
+
+Phase 2 will focus on:
+1. **LiveKit Python Agent** with Gemini Live API integration
+2. **Interview Service** for creating and managing interviews
+3. **Question Generation** using Gemini API
+4. **Voice Communication** between user and agent
+5. **Real-time Transcription** and answer capture
+
+**End of Phase 1**
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/32f88403-664c-4c80-81ef-1fa6e154a820/architect.md)
+[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/f2a45b7e-d247-46ca-b1c7-0adaa53d4e3e/repomix-output.xml)
+[3](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/9fd86433-4c5b-48c6-a16a-ac603b127fba/ARCHITECTURE.md)
+[4](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/c0e82a3c-aa9c-42c3-8506-1775c7e1a55c/phase0.md)
