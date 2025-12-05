@@ -1,7 +1,36 @@
 # Voice-Based AI Interview Agent
 
+![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16.0.7-000000?logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![LiveKit](https://img.shields.io/badge/LiveKit-WebRTC-00A1E0?logo=livekit&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?logo=nestjs&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-LTS-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178C6?logo=typescript&logoColor=white)
+![TypeORM](https://img.shields.io/badge/TypeORM-0.3.28-FE0803?logo=typeorm&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?logo=postgresql&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google_Gemini-API-4285F4?logo=google&logoColor=white)
+![LiveKit Agent](https://img.shields.io/badge/LiveKit_Agent-Python-00A1E0?logo=python&logoColor=white)
+![Gemini Live API](https://img.shields.io/badge/Gemini_Live-Voice-4285F4?logo=google&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=jsonwebtokens&logoColor=white)
+![Passport](https://img.shields.io/badge/Passport-0.7.0-34E27A?logo=passport&logoColor=white)
+![bcrypt](https://img.shields.io/badge/bcrypt-6.0.0-338C5F?logo=letsencrypt&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?logo=swagger&logoColor=black)
+![Jest](https://img.shields.io/badge/Jest-Testing-C21325?logo=jest&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-9.18.0-4B32C3?logo=eslint&logoColor=white)
+![Prettier](https://img.shields.io/badge/Prettier-3.4.2-F7B93E?logo=prettier&logoColor=black)
+
 A full-stack AI application that conducts technical interviews through a natural, voice-first conversational interface. This agent interviews candidates in real-time, generates dynamic technical questions, and evaluates responses using AI.
 
+![GitHub top language](https://img.shields.io/github/languages/top/mxngjxa/micro1-zara-mock)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/mxngjxa/micro1-zara-mock)
+![GitHub License](https://img.shields.io/github/license/mxngjxa/micro1-zara-mock)
+![GitHub Repo stars](https://img.shields.io/github/stars/mxngjxa/micro1-zara-mock?style=social)
+![GitHub forks](https://img.shields.io/github/forks/mxngjxa/micro1-zara-mock?style=social)
+![GitHub issues](https://img.shields.io/github/issues/mxngjxa/micro1-zara-mock)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/mxngjxa/micro1-zara-mock)
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mxngjxa/micro1-zara-mock?utm_source=oss&utm_medium=github&utm_campaign=mxngjxa%2Fmicro1-zara-mock&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 ## 🚀 Features
