@@ -1,701 +1,777 @@
-# **PHASE 0: FOUNDATION - Implementation Prompts**
+# **PHASE 0: FOUNDATION - Revised Implementation Prompts**
+
+## **High-Level Overview**
+
+**Objective**: Establish a minimal, working foundation with basic structure, database connectivity, and placeholder UI. **No authentication, no AI integration, no voice features yet** - those come in later phases.
+
+**Focus Areas**:
+- Monorepo structure with proper TypeScript configuration
+- Basic Next.js frontend with routing skeleton
+- NestJS backend with core middleware and health checks
+- PostgreSQL database with TypeORM entities and migrations
+- Shared types package for type safety
+- Docker Compose for local development environment
 
 ***
 
-## **PROMPT 1: FRONTEND ENGINEER**
+## **PROMPT 1: FRONTEND ENGINEER (Next.js Foundation)**
 
 ### **Objective**
-Set up the React + Vite frontend application with TypeScript strict mode, routing structure, state management, and API client configuration. Establish the foundational UI architecture for a voice-first interview platform.
+Initialize a minimal Next.js application with TypeScript, basic routing structure, and API client setup. **No authentication UI, no complex state management yet** - just the skeleton.
 
 ### **Project Context**
-You're building the client-side interface for a voice-based AI interview agent. The application must support real-time voice interaction, live transcription display, and seamless navigation between authentication, interview setup, interview session, and report pages.
+You're setting up the client-side foundation for a voice-based AI interview platform. This phase focuses on getting Next.js running with proper TypeScript configuration and basic page structure. Authentication, voice features, and complex UI come in later phases.
 
 ### **Tasks**
 
-**1. Initialize Frontend Application**
+**1. Initialize Next.js Application**
 - Navigate to `/apps/frontend` directory
-- Initialize Vite React project with TypeScript template
-- Enable TypeScript strict mode in `tsconfig.json`
-- Configure path aliases for clean imports (e.g., `@/components`, `@/services`)
-- Set up `.env.example` with required environment variables
+- Initialize Next.js 14+ with App Router using TypeScript template: `npx create-next-app@latest .` - ALREADY DONE
+- Enable TypeScript strict mode in `tsconfig.json` ALREADY DONE
+- Configure path aliases in `tsconfig.json`:
+  ```json
+    {
+    "compilerOptions": {
+        "paths": {
+        "@/*": ["./src/*"],
+        "@/components/*": ["./src/components/*"],
+        "@/lib/*": ["./src/lib/*"]
+        }
+    }
+    }
+  ```
+current compilations are :
 
-**2. Install Core Dependencies**
-- React Router DOM for client-side routing
-- TanStack React Query for server state management and caching
-- Zustand for lightweight client state (auth, UI state)
-- Axios for HTTP client with interceptor support
-- Socket.io-client for WebSocket communication
-- TailwindCSS with PostCSS and Autoprefixer for styling
-- DOMPurify for XSS protection
-- React Hook Form with validation resolver
-
-**3. Create Folder Structure**
+```json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
 ```
-/apps/frontend/src
-  /components          # Reusable UI components
-    /common           # Buttons, inputs, cards, modals
-    /layout           # Header, footer, sidebar
-    /auth             # Login/register forms
-    /interview        # Interview-specific components
-  /pages              # Route-level components
-    /auth             # Login, Register, VerifyEmail
-    /dashboard        # User dashboard
-    /interview        # Setup, Session, Report
-  /hooks              # Custom React hooks
-    /useAudioRecorder.ts
-    /useAudioPlayer.ts
-    /useSilenceDetection.ts
-  /services           # API clients and business logic
-    /api.client.ts    # Axios instance with interceptors
-    /auth.service.ts
-    /interview.service.ts
-    /voice.socket.ts  # WebSocket client
-  /stores             # Zustand state stores
-    /auth.store.ts
-    /interview.store.ts
-  /types              # Component-specific TypeScript types
-  /utils              # Helper functions and constants
-  /config             # Configuration files
+- Create `.env.local.example` file for environment variable documentation
+
+**2. Install Minimal Dependencies** - SKIP!
+- `axios` - HTTP client for API calls already installed
+
+**3. Create Basic Folder Structure**
+
+
+verify existing structure first
+```
+/apps/frontend
+  /src
+    /app                    # Next.js App Router pages
+      /api                  # API routes (if needed)
+      layout.tsx            # Root layout
+      page.tsx              # Landing page
+    /components             # React components (empty for now)
+      /ui                   # Basic UI components
+    /lib                    # Utilities and helpers
+      /api-client.ts        # Axios instance (basic setup)
+    /types                  # TypeScript types
+  /public                   # Static assets
+  next.config.js
+  tailwind.config.js
+  tsconfig.json
+  .env.local.example
 ```
 
-**4. Configure TailwindCSS**
-- Initialize Tailwind with custom design tokens
-- Define color palette (primary, secondary, success, error)
-- Set up typography scale and spacing system
-- Configure breakpoints for responsive design
-- Add custom utilities for voice UI (pulse animations, audio visualizers)
+**4. Configure TailwindCSS (Minimal)**
+- Accept default Tailwind configuration from Next.js setup
+- Add basic color variables in `tailwind.config.js`:
+  ```js
+  theme: {
+    extend: {
+      colors: {
+        primary: '#3B82F6',
+        secondary: '#64748B'
+      }
+    }
+  }
+  ```
+- Do **NOT** add: Custom animations, complex design tokens (Phase 1+)
 
-**5. Set Up Routing**
-- Configure React Router with these routes:
-  - `/` - Landing page (public)
-  - `/login` - Login page (public)
-  - `/register` - Register page (public)
-  - `/verify-email` - Email verification (public)
-  - `/dashboard` - User dashboard (protected)
-  - `/interview/setup` - Interview configuration (protected)
-  - `/interview/:id` - Interview session (protected)
-  - `/interview/:id/report` - Interview report (protected)
-- Implement `ProtectedRoute` component wrapper
-- Add loading states and error boundaries
-- Configure scroll restoration and route transitions
+**5. Create Basic Page Structure (No Auth)**
+- **app/page.tsx** - Simple landing page with "Coming Soon" text
+- **app/layout.tsx** - Root layout with basic HTML structure
+- Do **NOT** create: Login pages, Dashboard, Interview pages (Phase 1+)
 
-**6. Create API Client Service**
-- Initialize Axios instance with base URL from environment
-- Implement request interceptor to attach JWT token from localStorage
-- Implement response interceptor to:
-  - Handle 401 errors (token expiration) → attempt refresh or logout
-  - Handle network errors with user-friendly messages
-  - Log all API errors for debugging
-- Add retry logic with exponential backoff for failed requests
-- Export typed API client for use in services
+**6. Set Up Basic API Client**
+```typescript
+// lib/api-client.ts
+import axios from 'axios';
 
-**7. Set Up State Management**
-- Create auth store with Zustand:
-  - State: `user`, `isAuthenticated`, `isLoading`
-  - Actions: `login`, `logout`, `checkAuth`, `setUser`
-  - Persist tokens in localStorage with secure access patterns
-- Create interview store for session state management
-- Configure React Query with appropriate cache times and stale thresholds
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
-**8. Build Core UI Components**
-- `Button` - Variants: primary, secondary, danger, ghost
-- `Input` - Text, email, password with validation states
-- `Card` - Container component with elevation
-- `Modal` - Reusable modal with overlay
-- `Loader` - Loading spinner with size variants
-- `ErrorBoundary` - Catch and display component errors gracefully
-- `Toast` - Notification system for success/error messages
+// Basic error logging (no interceptors yet)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error);
+    return Promise.reject(error);
+  }
+);
+```
 
-**9. Implement Authentication Pages (UI Only)**
-- **LoginPage**: Email/password form, validation, loading states, error display, link to register
-- **RegisterPage**: Email, password, confirm password, strength indicator, terms checkbox
-- **VerifyEmailPage**: Token validation display, success/error states
-- Wire up forms to call placeholder API functions (actual integration in Phase 1)
+**7. Environment Configuration**
+Create `.env.local.example`:
+```
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
 
-**10. Create Dashboard Layout**
-- Top navigation bar with logo and user menu
-- Sidebar (optional) for future navigation
-- Main content area with responsive grid
-- Footer with links and version info
-- Ensure layout works on mobile, tablet, desktop
+**8. Create Basic UI Components (Optional)**
+Only if time permits:
+- `components/ui/Button.tsx` - Simple button component
+- `components/ui/Card.tsx` - Simple card container
+- Use basic ShadCN logic, they are present in:
 
-**11. Environment Configuration**
-- Create `.env.example` with:
-  - `VITE_API_BASE_URL` - Backend API URL
-  - `VITE_WS_URL` - WebSocket server URL
-  - `VITE_ENV` - Development/production flag
-- Document all environment variables in README
-- Add `.env` to `.gitignore`
+components/ui/button.tsx
+components/ui/card.tsx
 
-**12. Set Up Development Scripts**
-- `dev` - Start development server with hot reload
-- `build` - Production build with type checking
-- `preview` - Preview production build locally
-- `lint` - Run ESLint with auto-fix
-- `format` - Run Prettier formatting
-- `type-check` - TypeScript compilation check
 
 ### **Deliverables**
-✓ React + Vite application running on `http://localhost:5173`
+✓ Next.js application running on `http://localhost:3000` (or 3001 if backend uses 3000)
 ✓ TypeScript strict mode enabled with zero errors
-✓ TailwindCSS configured with custom theme
-✓ Routing structure with protected routes
-✓ API client with interceptors configured
-✓ Auth and interview stores initialized
-✓ Core UI components library created
-✓ Authentication pages (UI only) implemented
-✓ Dashboard layout responsive and functional
-✓ All dependencies installed and documented
-✓ README with setup instructions and component documentation
+✓ Basic landing page displays
+✓ API client configured with backend base URL
+✓ TailwindCSS working
+✓ Environment variables documented
+✓ No authentication, no complex features
 
 ### **Acceptance Criteria**
 ✓ `npm run dev` starts application without errors
-✓ `npm run build` completes successfully
-✓ All routes navigate correctly
-✓ Protected routes redirect to login when not authenticated
-✓ API client attaches authorization headers
-✓ No console errors or warnings
+✓ Landing page loads at root URL
 ✓ TypeScript compilation passes with strict mode
-✓ Responsive design works on all breakpoints
-✓ Code follows ESLint and Prettier standards
+✓ Basic API client can make requests (test with health check)
+✓ No console errors or warnings
+✓ Clean code structure following Next.js conventions
 
 ***
 
-## **PROMPT 2: BACKEND ENGINEER**
+## **PROMPT 2: BACKEND ENGINEER (NestJS Foundation)**
 
 ### **Objective**
-Set up the NestJS backend API with TypeScript, implement global middleware (logging, error handling, validation), configure environment management, establish module structure, and expose Swagger API documentation.
+Set up a minimal NestJS backend with global middleware, environment validation, and health check endpoint. **No auth, no business logic yet** - just the foundational infrastructure.
 
 ### **Project Context**
-You're building the REST API and WebSocket server for a voice-based AI interview platform. The backend must handle secure authentication, interview session management, real-time voice transcription coordination, and AI-driven question generation/evaluation using Gemini API.
+You're building the API foundation for a voice-based AI interview platform. This phase focuses on getting NestJS running with proper configuration, logging, error handling, and database connectivity. Authentication, AI integration, and WebSockets come in later phases.
 
 ### **Tasks**
 
 **1. Initialize NestJS Application**
 - Navigate to `/apps/backend` directory
-- Initialize NestJS project with CLI
+- Initialize NestJS project: `nest new . --skip-git`
 - Enable TypeScript strict mode in `tsconfig.json`
-- Configure path aliases for clean imports
-- Set up `.env.example` with all required environment variables
+- Set up `.env.example` with required variables
 
-**2. Install Core Dependencies**
-- `@nestjs/config` - Environment variable management with validation
-- `@nestjs/typeorm` and `typeorm` - ORM for PostgreSQL
-- `pg` - PostgreSQL driver
-- `@nestjs/jwt` and `@nestjs/passport` - Authentication
-- `passport-jwt` - JWT strategy
-- `bcrypt` and `@types/bcrypt` - Password hashing
-- `class-validator` and `class-transformer` - DTO validation
-- `@nestjs/websockets` and `@nestjs/platform-socket.io` - WebSocket support
-- `winston` and `winston-daily-rotate-file` - Logging
-- `@nestjs/swagger` - API documentation
-- `helmet` - Security headers
-- `@nestjs/throttler` - Rate limiting
-- `@google/generative-ai` - Gemini SDK
+**2. Install Core Dependencies Only**
+```bash
+npm install @nestjs/config @nestjs/typeorm typeorm pg
+npm install class-validator class-transformer
+npm install winston winston-daily-rotate-file
+npm install @nestjs/swagger
+```
 
-**3. Create Module Structure**
+Do **NOT** install yet:
+- Authentication packages (Phase 1)
+- WebSocket packages (Phase 2)
+- AI SDK packages (Phase 2)
+
+**3. Create Minimal Module Structure**
 ```
 /apps/backend/src
-  /modules
-    /auth              # Authentication & authorization
-      auth.module.ts
-      auth.service.ts
-      auth.controller.ts
-      /strategies
-        jwt.strategy.ts
-      /guards
-        jwt-auth.guard.ts
-      /dto
-        register.dto.ts
-        login.dto.ts
-    /users             # User management
-      users.module.ts
-      users.service.ts
-      users.controller.ts
-      /dto
-        create-user.dto.ts
-    /interviews        # Interview lifecycle
-      interviews.module.ts
-      interviews.service.ts
-      interviews.controller.ts
-      /dto
-        create-interview.dto.ts
-    /questions         # Question management
-      questions.module.ts
-      questions.service.ts
-      questions.controller.ts
-    /answers           # Answer storage & evaluation
-      answers.module.ts
-      answers.service.ts
-    /gemini            # Gemini API integration
-      gemini.module.ts
-      gemini.service.ts
-      gemini-questions.service.ts
-      gemini-evaluation.service.ts
-    /voice             # WebSocket voice gateway
-      voice.module.ts
-      voice.gateway.ts
-      voice.service.ts
-  /common              # Shared utilities
-    /guards
-      jwt-auth.guard.ts
-      roles.guard.ts
-    /decorators
-      current-user.decorator.ts
-      public.decorator.ts
+  /config
+    app.config.ts           # App configuration
+    database.config.ts      # Database configuration
+  /common
     /filters
       all-exceptions.filter.ts
-      http-exception.filter.ts
     /interceptors
       logging.interceptor.ts
-      transform.interceptor.ts
-    /pipes
-      validation.pipe.ts
     /interfaces
       api-response.interface.ts
-  /config              # Configuration modules
-    database.config.ts
-    jwt.config.ts
-    app.config.ts
-  /database            # Database related
-    /entities          # (Created in Database section)
-    /migrations        # TypeORM migrations
-    /seeds             # Database seed data
-  main.ts              # Application entry point
-  app.module.ts        # Root module
+  /database
+    /entities               # Created by database engineer
+  main.ts
+  app.module.ts
+  app.controller.ts         # Health check endpoint
+  app.service.ts
 ```
 
-**4. Configure Environment Management**
-- Set up `ConfigModule` to load and validate environment variables
-- Create Joi validation schema for all required variables:
-  - Database connection (host, port, user, password, name)
-  - JWT secrets and expiration times
-  - Gemini API key and configuration
-  - CORS origin whitelist
-  - Port and environment (dev/prod)
-- Throw errors on startup if required variables are missing
-- Document all variables in `.env.example`
+**4. Configure Environment Validation**
+```typescript
+// app.module.ts
+import { ConfigModule } from '@nestjs/config';
+import * as Joi from 'joi';
 
-**5. Implement Global Middleware**
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string().valid('development', 'production').default('development'),
+        PORT: Joi.number().default(3000),
+        DATABASE_HOST: Joi.string().required(),
+        DATABASE_PORT: Joi.number().default(5432),
+        DATABASE_USER: Joi.string().required(),
+        DATABASE_PASSWORD: Joi.string().required(),
+        DATABASE_NAME: Joi.string().required(),
+      })
+    }),
+    // TypeORM config (in Task 6)
+  ]
+})
+```
 
-**Logging Service (Winston):**
-- Create `LoggerService` with Winston configuration
-- Log levels: error, warn, info, debug
-- Console transport for development (colorized output)
-- Daily rotate file transport for production
-- Include timestamp, context, and metadata in all logs
-- Create custom logger method for HTTP requests/responses
+**5. Implement Basic Logging (Winston)**
+```typescript
+// common/services/logger.service.ts
+import * as winston from 'winston';
 
-**Global Exception Filter:**
-- Catch all unhandled exceptions
-- Transform errors into standardized API response format:
-  ```typescript
-  {
-    success: false,
-    error: {
-      code: string,
-      message: string,
-      statusCode: number,
-      timestamp: string
-    }
+@Injectable()
+export class LoggerService {
+  private logger: winston.Logger;
+  
+  constructor() {
+    this.logger = winston.createLogger({
+      level: process.env.LOG_LEVEL || 'info',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+      transports: [
+        new winston.transports.Console({
+          format: winston.format.simple()
+        })
+      ]
+    });
   }
-  ```
-- Log all errors with stack trace
-- Handle specific exception types (ValidationError, HttpException, TypeORM errors)
-- Never expose internal error details in production
-
-**Global Validation Pipe:**
-- Apply `class-validator` to all DTOs automatically
-- Configuration: `whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`
-- Return detailed validation errors with field names
-- Strip unknown properties from requests
-
-**Logging Interceptor:**
-- Log all incoming HTTP requests (method, URL, user ID, timestamp)
-- Log all outgoing responses (status code, duration)
-- Exclude sensitive data (passwords, tokens) from logs
-- Add request ID for tracing
-
-**6. Configure Database Connection**
-- Set up TypeORM module with PostgreSQL configuration
-- Connection details from environment variables
-- Enable synchronize: false (use migrations instead)
-- Configure logging for SQL queries in development
-- Set up SSL for production database connections
-- Add connection pooling configuration
-- Define entities path pattern
-
-**7. Implement JWT Authentication Strategy**
-- Create JWT configuration from environment variables
-- Implement `JwtStrategy` extending `PassportStrategy`:
-  - Extract JWT from Authorization header (Bearer token)
-  - Validate token signature and expiration
-  - Query user from database using payload.sub (user ID)
-  - Attach user object to request
-  - Handle invalid tokens gracefully
-- Create `JwtAuthGuard` to protect routes
-- Create `@Public()` decorator to bypass authentication
-- Create `@CurrentUser()` decorator to extract user from request
-
-**8. Set Up Rate Limiting**
-- Configure `@nestjs/throttler` module
-- Set default limits: 100 requests per 15 minutes
-- Apply stricter limits to sensitive endpoints:
-  - Auth endpoints: 5 requests per 15 minutes
-  - Interview creation: 3 per hour
-- Store rate limit data in Redis (if available) or in-memory
-- Return 429 Too Many Requests with retry-after header
-
-**9. Configure Security Headers (Helmet)**
-- Apply helmet middleware globally
-- Configure Content Security Policy
-- Set X-Frame-Options to DENY
-- Set X-Content-Type-Options to nosniff
-- Set Strict-Transport-Security for HTTPS
-- Configure CORS with environment-based whitelist
-
-**10. Set Up API Documentation (Swagger)**
-- Configure Swagger module at `/api/docs` endpoint
-- Add API metadata (title, description, version)
-- Document authentication scheme (Bearer JWT)
-- Add decorators to controllers for API documentation
-- Group endpoints by tags (Auth, Users, Interviews, etc.)
-- Generate example request/response bodies
-- Make Swagger available only in development (disable in production)
-
-**11. Create Standardized Response Format**
-- Create `ApiResponse<T>` interface for all endpoints
-- Success response structure:
-  ```typescript
-  {
-    success: true,
-    data: T,
-    timestamp: string
+  
+  log(message: string, context?: string) {
+    this.logger.info(message, { context });
   }
-  ```
-- Error response structure:
-  ```typescript
-  {
-    success: false,
-    error: { code, message, statusCode },
-    timestamp: string
+  
+  error(message: string, trace?: string, context?: string) {
+    this.logger.error(message, { trace, context });
   }
-  ```
-- Create response transformation interceptor
+}
+```
 
-**12. Implement Health Check Endpoint**
-- Create `/health` endpoint (public, no auth required)
-- Check database connection status
-- Check external service availability (Gemini API)
-- Return system status and version information
-- Use for monitoring and load balancer health checks
+**6. Configure Database Connection (TypeORM)**
+```typescript
+// app.module.ts
+TypeOrmModule.forRootAsync({
+  useFactory: (configService: ConfigService) => ({
+    type: 'postgres',
+    host: configService.get('DATABASE_HOST'),
+    port: configService.get('DATABASE_PORT'),
+    username: configService.get('DATABASE_USER'),
+    password: configService.get('DATABASE_PASSWORD'),
+    database: configService.get('DATABASE_NAME'),
+    entities: [__dirname + '/**/*.entity{.ts,.js}'],
+    synchronize: false, // Always use migrations
+    logging: configService.get('NODE_ENV') === 'development'
+  }),
+  inject: [ConfigService]
+})
+```
 
-**13. Set Up Development Scripts**
-- `start` - Start production server
-- `start:dev` - Start development server with watch mode
-- `start:debug` - Start with debugging enabled
-- `build` - Compile TypeScript to JavaScript
-- `lint` - Run ESLint with auto-fix
-- `format` - Run Prettier formatting
-- `test` - Run unit tests
-- `test:e2e` - Run end-to-end tests
-- `test:cov` - Generate test coverage report
+**7. Create Global Exception Filter**
+```typescript
+// common/filters/all-exceptions.filter.ts
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  constructor(private logger: LoggerService) {}
+  
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
+    
+    const status = exception instanceof HttpException 
+      ? exception.getStatus() 
+      : 500;
+    
+    const message = exception instanceof HttpException
+      ? exception.message
+      : 'Internal server error';
+    
+    this.logger.error(
+      `HTTP ${status} Error: ${message}`,
+      exception instanceof Error ? exception.stack : '',
+      'ExceptionFilter'
+    );
+    
+    response.status(status).json({
+      success: false,
+      error: {
+        statusCode: status,
+        message,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+}
+```
+
+**8. Apply Global Validation Pipe**
+```typescript
+// main.ts
+app.useGlobalPipes(new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  transform: true
+}));
+```
+
+**9. Create Health Check Endpoint**
+```typescript
+// app.controller.ts
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+  
+  @Get('health')
+  getHealth() {
+    return {
+      success: true,
+      data: {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+      }
+    };
+  }
+}
+```
+
+**10. Set Up Basic Swagger (Optional)**
+```typescript
+// main.ts
+const config = new DocumentBuilder()
+  .setTitle('Interview Agent API')
+  .setDescription('Voice-based AI Interview Platform API')
+  .setVersion('1.0')
+  .build();
+  
+const document = SwaggerModule.createDocument(app, config);
+SwaggerModule.setup('api/docs', app, document);
+```
+
+**11. Environment Configuration**
+Create `.env.example`:
+```
+NODE_ENV=development
+PORT=3000
+
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=interview_db
+
+LOG_LEVEL=info
+```
 
 ### **Deliverables**
 ✓ NestJS application running on `http://localhost:3000`
-✓ TypeScript strict mode enabled with zero errors
-✓ Module structure with clear separation of concerns
-✓ Global error handling and logging configured
-✓ JWT authentication strategy implemented
-✓ Rate limiting on all endpoints
-✓ Security headers applied (Helmet)
-✓ Swagger documentation at `/api/docs`
-✓ Health check endpoint functional
+✓ TypeScript strict mode enabled
+✓ Global error handling configured
+✓ Winston logging operational
+✓ TypeORM connected to PostgreSQL
+✓ Health check endpoint at `/health` returns 200
 ✓ Environment validation on startup
-✓ All dependencies installed and documented
-✓ README with API documentation and setup instructions
+✓ Swagger docs at `/api/docs` (optional)
+✓ No authentication, no business modules yet
 
 ### **Acceptance Criteria**
 ✓ `npm run start:dev` starts application without errors
-✓ `npm run build` completes successfully
-✓ Swagger UI accessible at `http://localhost:3000/api/docs`
-✓ Health check endpoint returns 200 OK
-✓ Invalid JWT returns 401 Unauthorized
-✓ Missing environment variables prevent startup
-✓ All HTTP requests logged with context
-✓ Validation errors return detailed field-level messages
+✓ Health endpoint returns valid JSON response
+✓ Database connection successful (logs confirmation)
+✓ Missing env variables prevent startup with clear error
+✓ All HTTP requests logged
 ✓ TypeScript compilation passes with strict mode
-✓ Code follows ESLint and Prettier standards
+✓ No business logic implemented yet (Phase 1+)
 
 ***
 
-## **PROMPT 3: DATABASE ENGINEER**
+## **PROMPT 3: DATABASE ENGINEER (PostgreSQL Schema Only)**
 
 ### **Objective**
-Design and implement the PostgreSQL database schema with TypeORM entities, establish relationships, create migrations, set up indexes for query optimization, and prepare seed data for development.
+Design and implement the complete database schema with TypeORM entities, relationships, migrations, and indexes. **No seed data with business logic yet** - just schema and structure.
 
 ### **Project Context**
-You're designing the data layer for a voice-based AI interview platform. The schema must support multi-user authentication, interview session management with questions and answers, evaluation storage, and efficient querying for reports and analytics.
+You're designing the data layer that will support user authentication (Phase 1), interview management (Phase 3), and AI-driven questions/answers (Phase 2-3). This phase focuses purely on schema design and database setup.
 
 ### **Tasks**
 
-**1. Set Up TypeORM Configuration**
-- Navigate to `/apps/backend/src/database` directory
-- Configure TypeORM in `app.module.ts` to connect to PostgreSQL
-- Use environment variables for all connection parameters
-- Enable migration auto-run in development (manual in production)
-- Configure naming strategy for consistent column/table names
-- Set up entity path pattern to auto-discover entities
+**1. Set Up TypeORM Entity Location**
+- Create `/apps/backend/src/database/entities` directory
+- Ensure TypeORM configuration points to this directory
+- Create `/apps/backend/src/database/migrations` directory for migrations
 
 **2. Define Database Entities**
 
 **User Entity** (`entities/user.entity.ts`):
-- Primary key: UUID (`id`)
-- Fields:
-  - `email` - String, unique, lowercase, indexed
-  - `password_hash` - String, excluded from JSON serialization
-  - `email_verified` - Boolean, default false
-  - `verification_token` - String, nullable
-  - `reset_token` - String, nullable
-  - `reset_token_expires` - Timestamp, nullable
-  - `created_at` - Timestamp, auto-generated
-  - `updated_at` - Timestamp, auto-updated
-  - `last_login` - Timestamp, nullable
-- Relationships:
-  - One-to-Many with Interview entity
-- Validation:
-  - Email format validation
-  - Password hash never returned in responses
-- Methods:
-  - `toJSON()` - Exclude sensitive fields
-- Indexes:
-  - Unique index on email
-  - Index on created_at for sorting
+```typescript
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Interview } from './interview.entity';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  
+  @Column({ unique: true, lowercase: true })
+  email: string;
+  
+  @Column()
+  password_hash: string;
+  
+  @Column({ default: false })
+  email_verified: boolean;
+  
+  @Column({ nullable: true })
+  verification_token: string;
+  
+  @Column({ nullable: true })
+  reset_token: string;
+  
+  @Column({ type: 'timestamp', nullable: true })
+  reset_token_expires: Date;
+  
+  @CreateDateColumn()
+  created_at: Date;
+  
+  @UpdateDateColumn()
+  updated_at: Date;
+  
+  @Column({ type: 'timestamp', nullable: true })
+  last_login: Date;
+  
+  @OneToMany(() => Interview, interview => interview.user)
+  interviews: Interview[];
+}
+```
 
 **Interview Entity** (`entities/interview.entity.ts`):
-- Primary key: UUID (`id`)
-- Foreign keys:
-  - `user_id` - References User.id, on delete CASCADE
-- Fields:
-  - `job_role` - String, max 100 chars
-  - `difficulty` - Enum ('JUNIOR', 'MID', 'SENIOR')
-  - `topics` - Array of strings (TypeORM simple-array)
-  - `status` - Enum ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'), default 'PENDING'
-  - `overall_score` - Decimal (5,2), nullable
-  - `performance_trend` - String, nullable ('IMPROVING', 'DECLINING', 'CONSISTENT')
-  - `completed_questions` - Integer, default 0
-  - `total_questions` - Integer
-  - `duration_minutes` - Integer, nullable
-  - `started_at` - Timestamp, auto-generated
-  - `completed_at` - Timestamp, nullable
-- Relationships:
-  - Many-to-One with User entity
-  - One-to-Many with Question entity (cascade all)
-- Indexes:
-  - Composite index on (user_id, status) for filtering
-  - Index on started_at for sorting
-- Constraints:
-  - completed_questions <= total_questions
-  - overall_score between 0 and 100
+```typescript
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { User } from './user.entity';
+import { Question } from './question.entity';
+
+@Entity('interviews')
+export class Interview {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  
+  @Column()
+  user_id: string;
+  
+  @ManyToOne(() => User, user => user.interviews, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+  
+  @Column({ length: 100 })
+  job_role: string;
+  
+  @Column({ type: 'enum', enum: ['JUNIOR', 'MID', 'SENIOR'] })
+  difficulty: string;
+  
+  @Column('simple-array')
+  topics: string[];
+  
+  @Column({ type: 'enum', enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'], default: 'PENDING' })
+  status: string;
+  
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  overall_score: number;
+  
+  @Column({ nullable: true })
+  performance_trend: string;
+  
+  @Column({ type: 'int', default: 0 })
+  completed_questions: number;
+  
+  @Column({ type: 'int' })
+  total_questions: number;
+  
+  @Column({ type: 'int', nullable: true })
+  duration_minutes: number;
+  
+  @CreateDateColumn()
+  started_at: Date;
+  
+  @Column({ type: 'timestamp', nullable: true })
+  completed_at: Date;
+  
+  @OneToMany(() => Question, question => question.interview, { cascade: true })
+  questions: Question[];
+}
+```
 
 **Question Entity** (`entities/question.entity.ts`):
-- Primary key: UUID (`id`)
-- Foreign keys:
-  - `interview_id` - References Interview.id, on delete CASCADE
-- Fields:
-  - `content` - Text, required
-  - `expected_answer` - Text, nullable
-  - `difficulty` - Enum ('EASY', 'MEDIUM', 'HARD')
-  - `topic` - String, max 100 chars
-  - `order` - Integer (position in interview)
-  - `evaluation_criteria` - JSONB, nullable
-  - `time_limit_seconds` - Integer, nullable
-  - `gemini_prompt` - Text, nullable (stores original prompt)
-  - `created_at` - Timestamp, auto-generated
-- Relationships:
-  - Many-to-One with Interview entity
-  - One-to-One with Answer entity (cascade all)
-- Indexes:
-  - Composite index on (interview_id, order) for sequential retrieval
-  - Index on difficulty for filtering
-- Constraints:
-  - order must be positive
-  - Unique constraint on (interview_id, order)
+```typescript
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { Interview } from './interview.entity';
+import { Answer } from './answer.entity';
+
+@Entity('questions')
+export class Question {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  
+  @Column()
+  interview_id: string;
+  
+  @ManyToOne(() => Interview, interview => interview.questions, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'interview_id' })
+  interview: Interview;
+  
+  @Column('text')
+  content: string;
+  
+  @Column('text', { nullable: true })
+  expected_answer: string;
+  
+  @Column({ type: 'enum', enum: ['EASY', 'MEDIUM', 'HARD'] })
+  difficulty: string;
+  
+  @Column({ length: 100 })
+  topic: string;
+  
+  @Column('int')
+  order: number;
+  
+  @Column('jsonb', { nullable: true })
+  evaluation_criteria: object;
+  
+  @Column({ type: 'int', nullable: true })
+  time_limit_seconds: number;
+  
+  @Column('text', { nullable: true })
+  gemini_prompt: string;
+  
+  @CreateDateColumn()
+  created_at: Date;
+  
+  @OneToOne(() => Answer, answer => answer.question, { cascade: true })
+  answer: Answer;
+}
+```
 
 **Answer Entity** (`entities/answer.entity.ts`):
-- Primary key: UUID (`id`)
-- Foreign keys:
-  - `question_id` - References Question.id, on delete CASCADE
-- Fields:
-  - `transcript` - Text, required
-  - `audio_url` - String, nullable (S3/cloud storage link)
-  - `evaluation_json` - JSONB, nullable (full evaluation details)
-  - `feedback` - Text, nullable
-  - `score` - Decimal (5,2), nullable
-  - `confidence_score` - Decimal (5,2), nullable (AI confidence)
-  - `duration_seconds` - Integer, nullable
-  - `created_at` - Timestamp, auto-generated
-  - `updated_at` - Timestamp, auto-updated
-- Relationships:
-  - One-to-One with Question entity
-- Indexes:
-  - Unique index on question_id
-  - Index on score for analytics
-- Constraints:
-  - score between 0 and 100
-  - confidence_score between 0 and 100
+```typescript
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Question } from './question.entity';
 
-**3. Define Relationships and Cascade Rules**
-- User → Interview: One-to-Many, cascade delete (deleting user removes all interviews)
-- Interview → Question: One-to-Many, cascade all (deleting interview removes questions)
-- Question → Answer: One-to-One, cascade all (deleting question removes answer)
-- Configure eager/lazy loading appropriately:
-  - Eager load: Only when explicitly needed (e.g., interview with questions for reports)
-  - Lazy load: Default behavior for better performance
+@Entity('answers')
+export class Answer {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  
+  @Column()
+  question_id: string;
+  
+  @OneToOne(() => Question, question => question.answer, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'question_id' })
+  question: Question;
+  
+  @Column('text')
+  transcript: string;
+  
+  @Column({ nullable: true })
+  audio_url: string;
+  
+  @Column('jsonb', { nullable: true })
+  evaluation_json: object;
+  
+  @Column('text', { nullable: true })
+  feedback: string;
+  
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  score: number;
+  
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  confidence_score: number;
+  
+  @Column({ type: 'int', nullable: true })
+  duration_seconds: number;
+  
+  @CreateDateColumn()
+  created_at: Date;
+  
+  @UpdateDateColumn()
+  updated_at: Date;
+}
+```
 
-**4. Create Database Migrations**
-- Generate initial migration for all entities:
-  - `npm run migration:generate -- -n InitialSchema`
-- Migration should include:
-  - CREATE TABLE statements for all entities
-  - Foreign key constraints with proper on delete behavior
-  - Index creation statements
-  - Enum type definitions for PostgreSQL
-  - Default values and check constraints
-- Test migration rollback functionality
-- Document migration execution order in README
+**3. Create Indexes**
+Add indexes to entities using decorators:
+```typescript
+// In User entity
+@Index('IDX_user_email', ['email'])
+@Index('IDX_user_created_at', ['created_at'])
 
-**5. Optimize Indexes for Query Patterns**
+// In Interview entity
+@Index('IDX_interview_user_status', ['user_id', 'status'])
+@Index('IDX_interview_started_at', ['started_at'])
 
-**Expected Query Patterns:**
-- Find user by email (authentication)
-- Find all interviews for a user, sorted by date
-- Find interview by ID with all questions and answers (report generation)
-- Find next unanswered question in an interview
-- Aggregate statistics (average scores, completion rates)
+// In Question entity
+@Index('IDX_question_interview_order', ['interview_id', 'order'])
 
-**Index Strategy:**
-- Single-column indexes: user.email, interview.started_at
-- Composite indexes:
-  - (user_id, status) - Filter user's active/completed interviews
-  - (interview_id, order) - Sequential question retrieval
-- Covering indexes where beneficial for read-heavy queries
-- JSONB indexes on evaluation_json for filtering by specific criteria (if needed)
-- Consider partial indexes for common filters (e.g., status = 'COMPLETED')
+// In Answer entity
+@Index('IDX_answer_question', ['question_id'])
+@Index('IDX_answer_score', ['score'])
+```
 
-**6. Implement Data Validation at Database Level**
-- Check constraints:
-  - Scores must be between 0 and 100
-  - Question order must be positive
-  - completed_questions <= total_questions
-- NOT NULL constraints on required fields
-- UNIQUE constraints:
-  - user.email
-  - (interview_id, question.order)
-  - question_id in answers table
-- Foreign key constraints with appropriate cascade rules
-- Default values for boolean and enum fields
+**4. Generate Initial Migration**
+```bash
+npm run typeorm migration:generate -- -n InitialSchema
+```
 
-**7. Create Seed Data for Development**
-- Create seed script (`seeds/development.seed.ts`)
-- Seed data should include:
-  - 3 test users with hashed passwords (use bcrypt)
-  - 5 sample interviews in various states (pending, in progress, completed)
-  - 10 questions per interview with varying difficulties
-  - Answers for completed interviews with realistic evaluation data
-- Ensure seed data is idempotent (can run multiple times without duplicates)
-- Add script to package.json: `npm run seed`
-- Document seed user credentials in README for testing
+Verify migration includes:
+- All table creation statements
+- Foreign key constraints with CASCADE
+- Index creation statements
+- Enum type definitions
 
-**8. Configure Database Connection Pooling**
-- Set up connection pool with appropriate limits:
-  - Min connections: 2
-  - Max connections: 10 (adjust based on expected load)
-  - Idle timeout: 10 seconds
-  - Connection timeout: 3 seconds
-- Configure connection retry logic with exponential backoff
-- Add health checks to verify database connectivity
+**5. Create Migration Run/Revert Scripts**
+Add to `package.json`:
+```json
+{
+  "scripts": {
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/config/database.config.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/config/database.config.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/config/database.config.ts"
+  }
+}
+```
 
-**9. Implement Soft Delete (Optional Enhancement)**
-- Add `deleted_at` timestamp field to User and Interview entities
-- Configure TypeORM soft delete functionality
-- Update queries to exclude soft-deleted records by default
-- Add admin endpoint to permanently delete soft-deleted records
+**6. Create Minimal Seed Data (Optional)**
+**Only** if time permits, create:
+- 1 test user (email: test@example.com, password: hashed "Password123!")
+- Document credentials in README
+- Do NOT create interview/question seed data yet (Phase 1+)
 
-**10. Set Up Database Backup Strategy**
-- Document backup procedures in README:
-  - Daily automated backups in production
-  - Backup retention policy (30 days)
-  - Point-in-time recovery configuration
-- Create script for local database backup/restore
-- Test restore process from backup
-
-**11. Add Database Performance Monitoring**
-- Enable query logging in development
-- Log slow queries (threshold: >100ms)
-- Add database connection metrics:
-  - Active connections
-  - Query execution time
-  - Transaction rollback rate
-- Configure alerts for connection pool exhaustion
-
-**12. Create Database Documentation**
-- Generate Entity-Relationship Diagram (ERD)
-- Document each entity with field descriptions
-- Document relationships and cascade rules
-- Document indexes and their purpose
-- Provide example queries for common operations
-- Add schema version tracking
+**7. Database Documentation**
+Create `database/README.md` with:
+- Entity descriptions
+- Relationship diagram (text-based or Mermaid)
+- Migration execution steps
+- Connection instructions
 
 ### **Deliverables**
-✓ Complete TypeORM entities for User, Interview, Question, Answer
-✓ Database relationships with proper cascade rules
-✓ Initial migration script tested and executable
-✓ Indexes created for optimized query performance
-✓ Seed data script with realistic test data
-✓ Connection pooling configured
-✓ Database documentation (schema, ERD, example queries)
-✓ Migration execution scripts in package.json
-✓ README with database setup and management instructions
+✓ Complete TypeORM entities (User, Interview, Question, Answer)
+✓ All relationships defined with proper cascades
+✓ Indexes configured on all entities
+✓ Initial migration generated and tested
+✓ Migration run/revert scripts functional
+✓ Database documentation created
+✓ No business logic, no complex seed data yet
 
 ### **Acceptance Criteria**
 ✓ `npm run migration:run` executes without errors
-✓ `npm run migration:revert` successfully rolls back changes
-✓ `npm run seed` populates database with test data
-✓ All foreign key constraints properly enforced
-✓ Check constraints prevent invalid data
-✓ Indexes improve query performance (measured with EXPLAIN)
-✓ Database connection successful from backend application
-✓ Queries for user interviews execute in <50ms
-✓ Report generation with full interview data executes in <200ms
-✓ TypeScript entity definitions match database schema exactly
-✓ No N+1 query problems in common operations
+✓ All tables created in PostgreSQL
+✓ Foreign key constraints enforced
+✓ Indexes created successfully
+✓ `npm run migration:revert` successfully rolls back
+✓ Entity files compile with TypeScript strict mode
+✓ Backend can connect to database and query tables
 
 ***
 
 ## **INTEGRATION VERIFICATION**
 
-### **After All Three Parts Complete:**
+### **Phase 0 Complete Checklist:**
 
-**1. Full Stack Connection Test**
-- Frontend API client connects to backend successfully
-- Backend connects to PostgreSQL database
-- Environment variables loaded correctly in all layers
-- CORS configured to allow frontend origin
+**1. Frontend Verification**
+- [ ] Next.js dev server runs on http://localhost:3001
+- [ ] Landing page loads without errors
+- [ ] TypeScript strict mode passes
+- [ ] API client configured with backend URL
 
-**2. Health Check**
-- Frontend health check: Application loads without errors
-- Backend health check: `/health` endpoint returns 200
-- Database health check: TypeORM connection status healthy
+**2. Backend Verification**
+- [ ] NestJS dev server runs on http://localhost:3000
+- [ ] `/health` endpoint returns 200 OK
+- [ ] Database connection successful (check logs)
+- [ ] Swagger docs accessible at `/api/docs`
 
-**3. End-to-End Smoke Test**
-- Manual test: Register new user → Login → View dashboard
-- Verify JWT token stored in frontend
-- Verify user created in database
-- Check logs for request/response flow
+**3. Database Verification**
+- [ ] PostgreSQL container running
+- [ ] All migrations executed successfully
+- [ ] Can query tables using pg admin or CLI
+- [ ] Foreign keys and indexes present
 
 **4. Docker Compose Verification**
-- All services start with `docker-compose up`
-- Services can communicate over Docker network
-- Database data persists across container restarts
-- Hot reload works for frontend and backend
+- [ ] All services start with `docker-compose up`
+- [ ] Frontend can reach backend health endpoint
+- [ ] Backend can connect to database
+- [ ] Hot reload works for both frontend and backend
+
+**5. Documentation Verification**
+- [ ] README exists with setup instructions
+- [ ] Environment variables documented
+- [ ] Database schema documented
+- [ ] API endpoints documented (if any)
+
+***
+
+## **What's NOT in Phase 0**
+
+The following features are **intentionally excluded** and will be added in subsequent phases:
+
+❌ Authentication (login, register, JWT) → **Phase 1**  
+❌ Password hashing and validation → **Phase 1**  
+❌ Protected routes and auth guards → **Phase 1**  
+❌ AI/Gemini integration → **Phase 2**  
+❌ WebSocket gateway → **Phase 2**  
+❌ Voice recording/playback → **Phase 2**  
+❌ Speech-to-text/text-to-speech → **Phase 2**  
+❌ Interview business logic → **Phase 3**  
+❌ Question generation → **Phase 3**  
+❌ Answer evaluation → **Phase 3**  
+❌ Report generation → **Phase 3**  
+❌ Complex UI components → **Phase 1-3**  
+❌ State management (Zustand/React Query) → **Phase 1**  
+
+**Phase 0 Success = Working foundation with database connectivity, ready for Phase 1 authentication implementation.**
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/d423c828-fbc2-4ff2-a4f3-6927764b3e33/ARCHITECTURE.md)
+[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/d1e4a3a7-71a6-4cd5-96e8-039844a9c9ad/phase0.md)
