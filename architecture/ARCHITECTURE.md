@@ -1,925 +1,730 @@
-# **VOICE-BASED AI INTERVIEW AGENT - ENHANCED IMPLEMENTATION PROMPT**
-## **Using Gemini API | React + NestJS + PostgreSQL**
+# **VOICE-BASED AI INTERVIEW AGENT - LIVEKIT IMPLEMENTATION**
+## **React + NestJS + LiveKit + Gemini Live API**
 
 ***
 
 ## **PROJECT OVERVIEW**
 
-Build a production-grade, voice-first AI interview platform that conducts technical interviews through natural conversation using Google Gemini API for all AI capabilities.
+Production-grade voice-first AI interview platform conducting technical interviews through natural conversation using LiveKit's Agent Platform and Google Gemini Live API.
 
 **Core Technologies:**
-- Frontend: React 18 + TypeScript + Vite + TailwindCSS
-- Backend: NestJS + TypeScript + WebSockets
-- Database: PostgreSQL + TypeORM
-- AI: Google Gemini API (question generation, evaluation, TTS interactions)
-- Auth: JWT + bcrypt
-- Real-time: Socket.io
+- **Frontend**: React 18 + TypeScript + Vite + TailwindCSS + LiveKit React Components
+- **Backend**: NestJS + TypeScript + REST API
+- **Voice AI**: LiveKit Agent Platform (Python) + Gemini Live API
+- **Database**: PostgreSQL + TypeORM
+- **AI Services**: Google Gemini API (question generation, evaluation)
+- **Auth**: JWT + bcrypt
+- **Real-time**: LiveKit WebRTC
 
 ***
 
 ## **ARCHITECTURAL PRINCIPLES**
 
-1. **Domain-Driven Design**: Clear bounded contexts (Auth, Interview, Voice, AI)
-2. **Dependency Injection**: All services testable and injectable
-3. **Repository Pattern**: Data access abstraction
-4. **Strategy Pattern**: Pluggable AI providers with fallbacks
-5. **SOLID Principles**: Foundation for all design decisions
-6. **Security First**: Defense-in-depth, input validation, rate limiting
-7. **Observability**: Comprehensive logging with Winston
+1. **Domain-Driven Design** - Clear bounded contexts (Auth, Interview, Voice AI Agent, Business Logic)
+2. **Separation of Concerns** - LiveKit handles real-time voice, NestJS handles business logic
+3. **Dependency Injection** - All services testable and injectable
+4. **Repository Pattern** - Data access abstraction
+5. **Strategy Pattern** - Pluggable AI providers with fallbacks
+6. **SOLID Principles** - Foundation for all design decisions
+7. **Security First** - Defense-in-depth, input validation, rate limiting
+8. **Observability** - Comprehensive logging with Winston
+
+***
+
+## **SYSTEM ARCHITECTURE**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         REACT FRONTEND                          │
+│  - Authentication UI                                            │
+│  - LiveKit Voice Components (useVoiceAssistant, BarVisualizer)  │
+│  - Interview Management UI                                      │
+│  - Report Generation UI                                         │
+└─────────────────────────────────────────────────────────────────┘
+           │                                    │
+           │ HTTP/REST                          │ WebRTC
+           ▼                                    ▼
+┌──────────────────────┐           ┌────────────────────────────┐
+│   NESTJS BACKEND     │           │   LIVEKIT CLOUD/SERVER     │
+│  - Auth Service      │           │  - Room Management         │
+│  - Interview Service │◄──RPC─────│  - WebRTC Transport        │
+│  - Question Service  │           │  - Agent Dispatcher        │
+│  - Evaluation Service│           └────────────────────────────┘
+│  - Report Service    │                       │
+│  - LiveKit Token Svc │                       │
+│  - PostgreSQL + ORM  │                       ▼
+└──────────────────────┘           ┌────────────────────────────┐
+                                   │ LIVEKIT AGENT (PYTHON)     │
+                                   │  - Gemini Live API         │
+                                   │  - Interview Orchestrator  │
+                                   │  - Turn Detection          │
+                                   │  - Noise Cancellation      │
+                                   │  - NestJS Integration      │
+                                   └────────────────────────────┘
+                                                │
+                                                ▼
+                                   ┌────────────────────────────┐
+                                   │   GOOGLE GEMINI API        │
+                                   │  - Live API (voice conv.)  │
+                                   │  - Question Generation     │
+                                   │  - Answer Evaluation       │
+                                   └────────────────────────────┘
+```
+
+***
+
+## **CURRENT STATUS: PHASE 0 - IN PROGRESS**
+
+**✅ Completed:**
+- Monorepo structure initialized (backend with NestJS)
+- TypeScript configuration (strict mode)
+- Basic project scaffolding
+- Development environment setup
+
+**🚧 In Progress:**
+- Database schema definition and migrations
+- Environment configuration
+- Docker Compose setup
+- Shared types and interfaces
 
 ***
 
 ## **IMPLEMENTATION PHASES**
 
-### **PHASE 0: FOUNDATION (Week 1)**
+### **PHASE 0: FOUNDATION** (Week 1) - **CURRENT**
 
-**Objective**: Establish monorepo structure, development environment, database schema, and shared types.
+**Objective**: Complete monorepo structure, database schema, and LiveKit setup.
 
-**Deliverables:**
+**Requirements:**
+
+#### Project Structure
 ```
 /project-root
-  /frontend (React + Vite)
-  /backend (NestJS)
-  /shared (TypeScript types)
+  /frontend              # React + Vite + LiveKit Components
+  /backend               # NestJS REST API (currently in progress)
+  /agent                 # Python LiveKit Agent
+  /shared                # TypeScript types/interfaces
   docker-compose.yml
+  README.md
 ```
 
-**Key Tasks:**
-1. Initialize monorepo with proper folder structure
-2. Configure TypeScript (strict mode) for both projects
-3. Set up PostgreSQL with TypeORM migrations
-4. Create database entities: User, Interview, Question, Answer
-5. Implement global error handling and logging (Winston)
-6. Configure Docker Compose for local development
-7. Set up environment variables with validation
-8. Create shared TypeScript interfaces and DTOs
+#### Database Schema
+**Required Entities:**
+- **users**: id (UUID), email (unique), password_hash, email_verified (boolean), created_at, last_login
+- **interviews**: id (UUID), user_id (FK), job_role, difficulty (ENUM: EASY/MEDIUM/HARD), topics (array), status (ENUM: PENDING/IN_PROGRESS/COMPLETED), overall_score, completed_questions, started_at, completed_at
+- **questions**: id (UUID), interview_id (FK), content (text), expected_answer (text), difficulty, topic, order (integer), evaluation_criteria (text)
+- **answers**: id (UUID), question_id (FK), transcript (text), audio_url (optional), evaluation_json (jsonb), score (0-100), feedback (text), duration_seconds, created_at
+- **interview_sessions**: id (UUID), interview_id (FK), livekit_room_name, livekit_session_id, started_at, ended_at, status
 
-**Database Schema:**
-- **users**: id, email, password_hash, email_verified, created_at, last_login
-- **interviews**: id, user_id, job_role, difficulty, topics[], status, overall_score, completed_questions, started_at
-- **questions**: id, interview_id, content, expected_answer, difficulty, topic, order, evaluation_criteria
-- **answers**: id, question_id, transcript, audio_url, evaluation_json, score, feedback, duration_seconds
+#### Environment Configuration
+**Backend (.env):**
+```
+NODE_ENV=development
+DATABASE_URL=postgresql://...
+JWT_SECRET=...
+JWT_EXPIRATION=24h
+REFRESH_TOKEN_EXPIRATION=7d
+
+# LiveKit
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=...
+LIVEKIT_API_SECRET=...
+
+# Google Gemini
+GOOGLE_API_KEY=...
+```
+
+**Agent (.env):**
+```
+LIVEKIT_URL=...
+LIVEKIT_API_KEY=...
+LIVEKIT_API_SECRET=...
+GOOGLE_API_KEY=...
+NESTJS_API_URL=http://localhost:3000
+```
+
+#### Key Deliverables
+- TypeORM migrations for all entities
+- Global error handling middleware (NestJS)
+- Winston logger configuration
+- Docker Compose for PostgreSQL
+- Swagger/OpenAPI documentation setup
+- Shared TypeScript types exported from `/shared`
 
 **Acceptance Criteria:**
-✓ `docker-compose up` starts all services
-✓ Database migrations execute successfully
-✓ Backend API accessible with Swagger docs
-✓ Frontend runs with hot-reload
-✓ Zero TypeScript errors across projects
+- ✓ `docker-compose up` starts PostgreSQL
+- ✓ Database migrations run successfully
+- ✓ Backend API accessible at `http://localhost:3000`
+- ✓ Swagger docs at `http://localhost:3000/api/docs`
+- ✓ Zero TypeScript errors
+- ✓ LiveKit account created and API keys obtained
 
 ***
 
-### **PHASE 1: AUTHENTICATION (Week 1-2)**
+### **PHASE 1: AUTHENTICATION** (Week 1-2)
 
-**Objective**: Implement secure JWT-based authentication with email verification and session management.
+**Objective**: Secure JWT-based authentication with email verification.
 
-**Backend Implementation:**
-```typescript
-PSEUDOCODE - Auth Module:
+#### Backend Requirements
 
-1. User Service:
-   - create(email, password): Hash with bcrypt (10 rounds), generate verification token
-   - findByEmail(email): Query user for login
-   - validatePassword(user, password): Compare with bcrypt
-   - verifyEmail(token): Mark email as verified
+**Auth Module Components:**
+1. **User Service**
+   - Create user with bcrypt password hashing (10 rounds)
+   - Email verification token generation
+   - Password validation
+   - User lookup by email
 
-2. Auth Service:
-   - register(dto): Create user, generate JWT tokens (access: 24h, refresh: 7d)
-   - login(dto): Validate credentials, return tokens
-   - refreshToken(token): Generate new access token
-   - validateUser(userId): Verify user exists for JWT strategy
+2. **Auth Service**
+   - User registration with JWT token generation
+   - Login with credential validation
+   - Refresh token mechanism
+   - Token validation strategy
 
-3. JWT Strategy:
-   - Extract Bearer token from Authorization header
-   - Validate signature with JWT_SECRET
-   - Attach user to request
+3. **Security Middleware**
+   - JWT strategy with Bearer token extraction
+   - JwtAuthGuard for protected routes
+   - @Public() decorator for public endpoints
+   - @CurrentUser() decorator for user extraction
 
-4. Guards & Decorators:
-   - JwtAuthGuard: Protect routes requiring authentication
-   - @Public(): Decorator to bypass auth on specific endpoints
-   - @CurrentUser(): Extract user from request
+4. **DTOs with Validation**
+   - RegisterDto: Email validation, minimum 8 chars, password complexity
+   - LoginDto: Email and password required
+   - Use class-validator decorators
 
-5. DTOs with Validation:
-   - RegisterDto: @IsEmail, @MinLength(8), password complexity regex
-   - LoginDto: @IsEmail, @IsNotEmpty
-```
+#### Frontend Requirements
 
-**Frontend Implementation:**
-```typescript
-PSEUDOCODE - Auth Client:
+**Auth Client Components:**
+1. **Auth Service**
+   - Registration, login, logout methods
+   - Token management in localStorage (with XSS protection)
+   - Auto-refresh token before expiration
+   - Current user fetching
 
-1. Auth Service (services/auth.service.ts):
-   - register(email, password): POST /auth/register, store tokens
-   - login(email, password): POST /auth/login, store tokens
-   - logout(): Clear tokens, redirect to /login
-   - getCurrentUser(): GET /auth/me
-   - refreshToken(): POST /auth/refresh with refresh token
-   - Token storage: localStorage (with XSS protection via DOMPurify)
+2. **State Management (Zustand)**
+   - user, isAuthenticated, isLoading state
+   - login, register, logout, checkAuth actions
 
-2. Auth Store (Zustand):
-   - State: user, isAuthenticated, isLoading
-   - Actions: login, register, logout, checkAuth, setUser
+3. **API Client**
+   - Axios interceptors for Authorization header
+   - 401 handling with token refresh or redirect
 
-3. API Client with Interceptors:
-   - Request: Attach Authorization header from localStorage
-   - Response: Handle 401 by refreshing token or redirecting to login
+4. **UI Components**
+   - LoginPage with form validation
+   - RegisterPage with password strength indicator
+   - EmailVerificationPage
+   - ProtectedRoute wrapper component
 
-4. Protected Route Component:
-   - Check isAuthenticated from store
-   - Show loading spinner while checking
-   - Redirect to /login if not authenticated
-
-5. UI Components:
-   - LoginPage: Email/password inputs, error display, "Remember me"
-   - RegisterPage: Email, password, confirm password, strength indicator
-   - EmailVerificationPage: Token-based verification
-```
-
-**Security Requirements:**
+#### Security Requirements
 - Password hashing with bcrypt (never store plaintext)
-- JWT signature validation on every protected request
-- Rate limiting on auth endpoints (5 attempts per 15 min)
+- JWT signature validation
+- Rate limiting: 5 attempts per 15 minutes on auth endpoints
 - HTTPS in production with HSTS headers
-- CORS whitelist for allowed origins
+- CORS whitelist configuration
 - Input sanitization with class-validator
 
 **Acceptance Criteria:**
-✓ Users can register with email/password
-✓ Email verification flow works
-✓ Login returns valid JWT tokens
-✓ Protected routes require authentication
-✓ Token refresh works before expiration
-✓ Password complexity enforced
-✓ Unit tests >80% coverage
+- ✓ User registration with email/password
+- ✓ Email verification flow
+- ✓ JWT token issuance and validation
+- ✓ Protected routes require authentication
+- ✓ Token refresh mechanism
+- ✓ Password complexity enforcement
+- ✓ Unit test coverage >80%
 
 ***
 
-### **PHASE 2: GEMINI INTEGRATION & VOICE INFRASTRUCTURE (Week 2-3)**
+### **PHASE 2: LIVEKIT INTEGRATION & VOICE INFRASTRUCTURE** (Week 2-3)
 
-**Objective**: Integrate Gemini API for AI capabilities and implement real-time voice communication.
+**Objective**: Integrate LiveKit Agent Platform with Gemini Live API for voice communication.
 
-**Backend Implementation:**
+#### LiveKit Agent Requirements (Python)
 
-```typescript
-PSEUDOCODE - Gemini Service:
+**Agent Configuration:**
+- Install dependencies: `livekit-agents[google]`, `livekit-plugins-noise-cancellation`, `httpx`
+- Download model files for turn detection and noise cancellation
+- Configure AgentSession with Gemini Live API integration
 
-1. Initialize Gemini SDK:
-   import { GoogleGenerativeAI } from '@google/generative-ai'
-   
-   genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
-   model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+**Agent Capabilities:**
+1. **Interview Orchestration**
+   - Connect to LiveKit rooms based on metadata
+   - Fetch interview details from NestJS backend
+   - Ask questions sequentially using Gemini Live API
+   - Detect when user finishes speaking (turn detection)
+   - Send transcripts to NestJS for evaluation
+   - Handle interview completion
 
-2. Question Generation:
-   generateQuestions(jobRole, difficulty, topics, count):
-     - Build prompt: "Generate {count} questions for {jobRole} at {difficulty} level"
-     - Specify JSON output format with: content, expected_answer, difficulty, topic
-     - Call model.generateContent(prompt)
-     - Parse JSON response
-     - Validate and return questions
-     - Implement retry with exponential backoff (3 attempts)
-     - Cache common question sets (Redis or in-memory)
+2. **Gemini Live API Integration**
+   - Model: `gemini-2.5-flash-native-audio-preview-09-2025`
+   - Voice: Configurable (default: "Puck")
+   - Temperature: 0.7 for natural conversation
+   - Modalities: Audio-only for voice interaction
+   - System instructions for professional interviewer behavior
 
-3. Answer Evaluation:
-   evaluateAnswer(question, expectedAnswer, transcript):
-     - Build evaluation prompt with scoring rubric
-     - Request JSON output: correctness, completeness, clarity, feedback, strengths, improvements
-     - Calculate overall_score = (correctness * 0.5 + completeness * 0.3 + clarity * 0.2)
-     - Return structured evaluation object
-     - Log all evaluations for quality assurance
+3. **Audio Processing**
+   - Multilingual turn detection
+   - Noise cancellation for audio input
+   - Real-time audio streaming
+   - Transcript event handling (interim and final)
 
-4. Conversational Interactions:
-   generateResponse(context, userInput):
-     - Generate natural responses for interview guidance
-     - Handle edge cases (unclear answers, off-topic responses)
-     - Return encouraging, professional feedback
-```
+#### NestJS Backend Requirements
 
-```typescript
-PSEUDOCODE - Speech Services:
+**LiveKit Integration Service:**
+1. **Token Generation**
+   - Generate short-lived access tokens (1 hour)
+   - Room-specific grants
+   - Participant identity management
 
-1. Text-to-Speech (Google Cloud TTS):
-   synthesize(text, voice='en-US-Neural2-A'):
-     - Call Google Cloud TTS API
-     - Configuration: audioEncoding='MP3', speakingRate=1.0
-     - Return audio buffer (MP3 format)
-     - Cache common phrases (< 200 chars) to reduce API calls
-     - Implement rate limiting and exponential backoff
+2. **Room Management**
+   - Create rooms with interview metadata
+   - Set room timeout (5 minutes for empty rooms)
+   - Delete rooms after interview completion
+   - Limit participants (1 user + 1 agent)
 
-2. Speech-to-Text (Google Cloud Speech):
-   createStreamingRecognition():
-     - Initialize streaming recognize with config:
-       * encoding='LINEAR16', sampleRate=16000, language='en-US'
-       * enableAutomaticPunctuation=true
-       * model='latest_long' for better accuracy
-     - Return stream and onTranscript callback
-     - Emit both interim (partial) and final results
-     - Handle errors gracefully with fallback
+**Interview Service Updates:**
+1. **Interview Lifecycle**
+   - Create interview and generate questions via Gemini API
+   - Start interview: Create LiveKit room, return token and URL
+   - Get interview details for agent
+   - Get next question based on adaptive difficulty
+   - Complete interview: Calculate scores, delete room
 
-   transcribeAudioBuffer(audioBuffer):
-     - For batch transcription of complete recordings
-     - Use for stored audio file processing
-```
+2. **Question Generation (Gemini API)**
+   - Generate N questions for job role and difficulty
+   - Parse JSON response with structured format
+   - Validate question structure
+   - Implement retry with exponential backoff
+   - Cache common question sets
 
-```typescript
-PSEUDOCODE - WebSocket Gateway:
+3. **Answer Evaluation (Gemini API)**
+   - Evaluate transcript against expected answer
+   - Return structured scores: correctness, completeness, clarity
+   - Calculate overall_score with weighted formula
+   - Provide constructive feedback
 
-@WebSocketGateway({ namespace: '/voice', cors: true })
-VoiceGateway:
+**Answers Service:**
+- Create answer with transcript from agent
+- Trigger evaluation via Gemini API
+- Store evaluation results in database
+- Update interview progress
 
-1. Connection Management:
-   - handleConnection(client): Log connection, initialize session
-   - handleDisconnect(client): Cleanup session, end STT stream
+#### Frontend Requirements (React + LiveKit)
 
-2. Event Handlers:
-   
-   @SubscribeMessage('startInterview'):
-     - Initialize interview session
-     - Get first question from database
-     - Generate TTS audio for question
-     - Emit 'question' event with audio buffer (base64)
-   
-   @SubscribeMessage('audioStream'):
-     - Receive audio chunks (base64 encoded)
-     - Convert to buffer and accumulate
-     - Stream to STT service
-     - Emit 'transcript' events (partial and final)
-   
-   @SubscribeMessage('stopRecording'):
-     - End STT stream
-     - Get final transcript
-     - Emit 'processing' status
-     - Evaluate answer with Gemini
-     - Save answer and evaluation to database
-     - Determine next question based on score:
-       * Score >= 80: Increase difficulty
-       * Score 50-79: Same difficulty
-       * Score < 50: Decrease difficulty (min EASY)
-     - If interview complete: emit 'interviewComplete' with report
-     - Else: emit next 'question' event
-   
-   @SubscribeMessage('skipQuestion'):
-     - Mark answer as skipped
-     - Proceed to next question
+**LiveKit React Components:**
+1. **Interview Session Page**
+   - LiveKitRoom component with server URL and token
+   - useVoiceAssistant hook for agent state
+   - BarVisualizer for audio visualization
+   - RoomAudioRenderer for audio playback
+   - VoiceAssistantControlBar for controls
 
-3. Session Management:
-   - In-memory Map with clientId as key
-   - Store: interviewId, currentQuestion, audioChunks, transcript, sttStream
-   - Cleanup on disconnect or interview completion
-```
+2. **UI State Management**
+   - Display current question
+   - Show agent state (initializing, listening, thinking, speaking)
+   - Audio level visualization
+   - Processing indicators
+   - Error handling and display
 
-**Frontend Implementation:**
+3. **User Flow**
+   - Connect to LiveKit room on interview start
+   - Listen to questions from agent
+   - Speak answers (auto-detected when finished)
+   - Show real-time feedback
+   - Navigate to report on completion
 
-```typescript
-PSEUDOCODE - Audio Hooks:
-
-1. useAudioRecorder():
-   State: isRecording, audioLevel, permissionStatus
-   
-   Methods:
-   - requestPermission(): getUserMedia({ audio: true })
-   - startRecording(onChunk):
-     * Initialize MediaRecorder with 'audio/webm;codecs=opus'
-     * Setup Web Audio API for visualization (AnalyserNode)
-     * Start recording with 250ms chunks
-     * Calculate RMS amplitude for audio level meter
-     * Call onChunk callback for each audio chunk
-   
-   - stopRecording(): Stop MediaRecorder, reset state
-   - cleanup(): Stop all tracks, close AudioContext
-
-2. useAudioPlayer():
-   State: isPlaying, duration, currentTime
-   
-   Methods:
-   - play(audioUrl): Load and play audio using HTML5 Audio API
-   - pause(): Pause playback
-   - onEnded: Callback when playback completes
-
-3. useSilenceDetection(audioLevel, threshold=0.05, duration=1500):
-   - Track consecutive silence duration
-   - Reset on any speech detection
-   - Emit 'silenceDetected' after duration threshold
-   - Used for automatic question advancement
-```
-
-```typescript
-PSEUDOCODE - Voice WebSocket Client:
-
-class VoiceSocketClient:
-  - connect(): Initialize socket.io connection to /voice namespace
-  - Setup event listeners:
-    * 'connect': Log connection
-    * 'question': Update UI, play TTS audio
-    * 'transcript': Update transcript display in real-time
-    * 'evaluation': Show score and feedback
-    * 'processing': Show loading indicator
-    * 'interviewComplete': Navigate to report page
-    * 'error': Display error message
-  
-  - startInterview(interviewId): Emit to backend
-  - sendAudioChunk(blob): Convert to base64 and emit
-  - stopRecording(): Signal end of answer
-  - skipQuestion(): Skip current question
-  - disconnect(): Clean up listeners and close connection
-```
-
-```typescript
-PSEUDOCODE - Interview Session Page:
-
-InterviewSessionPage Component:
-  State:
-  - currentQuestion, transcript, isProcessing, progress, error
-  - audioLevel (from useAudioRecorder)
-  
-  Lifecycle:
-  - useEffect on mount:
-    * Connect to voice WebSocket
-    * Setup all event listeners
-    * Start interview
-    * Cleanup on unmount
-  
-  UI Sections:
-  1. Progress Bar: "Question X of Y" with percentage
-  2. Question Display: Large, prominent text
-  3. Microphone Control:
-     - Large circular button (🎤 or 🔴)
-     - Click to start/stop recording
-     - Audio level visualization (horizontal bar)
-     - Status text: "Click to speak" / "Click to stop"
-  4. Live Transcript: Real-time display with auto-scroll
-  5. Action Buttons: "Skip Question" (with confirmation)
-  6. Processing Indicator: Spinner with "Evaluating..."
-  7. Error Display: Red banner for errors
-  8. Hidden Audio Element: For TTS playback
-  
-  User Flow:
-  1. Question appears with TTS audio
-  2. User clicks mic button to speak
-  3. Live transcript updates in real-time
-  4. Silence detection (1.5s) auto-stops recording OR user clicks stop
-  5. "Evaluating..." message displays
-  6. Brief feedback toast shows score
-  7. Next question appears automatically
-  8. Repeat until all questions answered
-  9. Navigate to report page
-```
+**Interview Service (Frontend):**
+- Create interview
+- Start interview and receive LiveKit credentials
+- List user's interviews
+- Get interview report
 
 **Acceptance Criteria:**
-✓ Gemini generates contextual questions based on job role
-✓ Users speak and see live transcription
-✓ TTS plays questions with clear audio
-✓ Silence detection triggers automatic advance after 1.5s
-✓ WebSocket maintains stable connection
-✓ Audio latency <500ms
-✓ Evaluation completes <3 seconds
-✓ Microphone permission handled gracefully
-✓ Fallback to text input if voice unavailable
-✓ Works on Chrome, Firefox, Safari
+- ✓ LiveKit agent connects to rooms automatically
+- ✓ Gemini Live API provides natural voice interaction
+- ✓ Turn detection works seamlessly (no manual stop)
+- ✓ Noise cancellation improves audio quality
+- ✓ Transcripts sent to NestJS in real-time
+- ✓ Questions flow naturally from agent
+- ✓ Audio latency <500ms
+- ✓ Frontend visualizer shows agent state
+- ✓ Interview completes and room is cleaned up
+- ✓ Works on Chrome, Firefox, Safari
 
 ***
 
-### **PHASE 3: INTERVIEW ENGINE & BUSINESS LOGIC (Week 3-4)**
+### **PHASE 3: INTERVIEW ENGINE & BUSINESS LOGIC** (Week 3-4)
 
-**Objective**: Complete interview lifecycle management with adaptive difficulty and comprehensive reporting.
+**Objective**: Complete interview lifecycle with adaptive difficulty and comprehensive reporting.
 
-**Backend Implementation:**
+#### Backend Requirements
 
-```typescript
-PSEUDOCODE - Interviews Service:
+**Interview Engine:**
+1. **Interview Creation**
+   - Validate parameters (5-20 questions)
+   - Generate contextual questions via Gemini
+   - Store questions with order and metadata
+   - Support multiple job roles and difficulties
 
-1. Create Interview:
-   create(userId, dto):
-     - Validate: 5 <= total_questions <= 20
-     - Create interview entity (status=PENDING)
-     - Generate questions using Gemini
-     - Save questions to database with order
-     - Return interview with first question
+2. **Adaptive Difficulty Logic**
+   - Track previous answer scores
+   - Adjust question difficulty based on performance:
+     * Score ≥80: Increase to HARD
+     * Score 50-79: Maintain difficulty
+     * Score <50: Decrease to EASY
+   - Select next unanswered question with preferred difficulty
 
-2. Start Interview:
-   start(id):
-     - Update status to IN_PROGRESS
-     - Set started_at timestamp
-     - Return interview
+3. **Interview Completion**
+   - Calculate overall score (average of all answers)
+   - Analyze performance trend (improving/declining/consistent)
+   - Calculate interview duration
+   - Update status and timestamps
 
-3. Question Sequencing:
-   getNextQuestion(interviewId, previousScore):
-     - Get all questions ordered by 'order' field
-     - Find first unanswered question
-     - Adaptive difficulty logic:
-       * If previousScore >= 80: Prefer HARD questions from remaining
-       * If previousScore 50-79: Same difficulty
-       * If previousScore < 50: Prefer EASY questions from remaining
-     - Return next question or null if complete
+4. **Report Generation**
+   - Aggregate all answers with evaluations
+   - Calculate category scores
+   - Generate personalized insights via Gemini:
+     * Overall performance analysis
+     * Strengths and weaknesses identification
+     * 3-5 actionable recommendations
+     * Learning resource suggestions
 
-4. Complete Interview:
-   complete(id):
-     - Calculate overall_score (average of all answer scores)
-     - Analyze performance trend:
-       * Compare first half vs second half scores
-       * IMPROVING if difference > 5
-       * DECLINING if difference < -5
-       * CONSISTENT otherwise
-     - Calculate duration_minutes
-     - Update status to COMPLETED
-     - Set completed_at timestamp
+5. **Access Control**
+   - User-specific interview access
+   - Authorization checks on all endpoints
+   - Audit logging for compliance
 
-5. Generate Report:
-   generateReport(id):
-     - Aggregate all answers with evaluations
-     - Calculate category scores (correctness, completeness, clarity)
-     - Generate personalized insights using Gemini:
-       * Analyze overall performance
-       * Identify strengths and weaknesses
-       * Provide 3-5 actionable recommendations
-       * Suggest learning resources
-     - Return comprehensive report object
+**Questions Service:**
+- Bulk question creation with ordering
+- Question lookup with relations
+- Adaptive difficulty selection algorithm
 
-6. User Access Control:
-   - Ensure users can only access their own interviews
-   - Implement authorization checks in all methods
-   - Log all access attempts for audit trail
-```
+**Answers Service:**
+- Answer creation with transcript
+- Trigger async evaluation
+- Store evaluation results
+- Update interview progress counter
 
-```typescript
-PSEUDOCODE - Questions Service:
+#### Frontend Requirements
 
-1. createBulk(interviewId, questions[]):
-   - Create question entities with interview_id
-   - Assign order (1, 2, 3, ...)
-   - Store evaluation_criteria from Gemini response
-   - Bulk insert to database
+**Interview Setup Page:**
+- Job role selection (dropdown with common roles + custom)
+- Difficulty level (Junior/Mid/Senior radio buttons)
+- Topic selection (multi-select checkboxes)
+- Question count slider (5-20)
+- Estimated duration display
+- Question preview samples
+- Form validation and submission
 
-2. findById(id):
-   - Query question with answer relation
-   - Throw NotFoundException if not found
+**Interview Report Page:**
+1. **Overall Score Section**
+   - Circular gauge visualization (0-100)
+   - Color-coded performance (green/yellow/red)
+   - Performance trend indicator
 
-3. Adaptive Difficulty Selection:
-   selectQuestionByDifficulty(unanswered[], preferredDifficulty):
-     - Filter questions by preferred difficulty
-     - If none available, select closest difficulty
-     - Return question or fallback to first unanswered
-```
+2. **Category Breakdown**
+   - Horizontal bar charts
+   - Technical Accuracy score
+   - Completeness score
+   - Communication score
 
-```typescript
-PSEUDOCODE - Answers Service:
+3. **Question-by-Question Analysis**
+   - Expandable accordion for each question
+   - User transcript display
+   - Score with color indicator
+   - AI feedback and suggestions
+   - Strengths and improvements lists
 
-1. create(dto):
-   - Create answer entity with:
-     * question_id
-     * transcript (from STT)
-     * evaluation_json (from Gemini)
-     * score (overall score from evaluation)
-     * feedback (text feedback)
-     * duration_seconds
-   - Save to database
-   - Update interview.completed_questions counter
-   - Return answer
+4. **Insights & Recommendations**
+   - Personalized insights from Gemini
+   - Actionable next steps
+   - Learning resource links
 
-2. findByQuestionId(questionId):
-   - Query answer for specific question
-   - Used to check if question already answered
-```
+5. **Action Buttons**
+   - Download report (PDF)
+   - Retake interview
+   - Share report (optional)
 
-**Frontend Implementation:**
-
-```typescript
-PSEUDOCODE - Interview Setup Page:
-
-InterviewSetupPage Component:
-  Form fields:
-  - Job Role: Dropdown (Frontend, Backend, Data Science, DevOps) + "Custom"
-  - Difficulty: Radio buttons (Junior, Mid, Senior)
-  - Topics: Multi-select checkboxes (React, TypeScript, Node.js, Python, SQL, etc.)
-  - Question Count: Slider (5-20 questions)
-  
-  Display:
-  - Estimated duration: {count * 3} minutes
-  - Question preview: Sample questions for selected role
-  
-  Validation:
-  - At least 1 topic selected
-  - Valid question count range
-  
-  Submit:
-  - POST /api/interviews with DTO
-  - Navigate to /interview/:id on success
-  - Show error toast on failure
-```
-
-```typescript
-PSEUDOCODE - Interview Report Page:
-
-InterviewReportPage Component:
-  Data fetching:
-  - useEffect: GET /api/interviews/:id/report
-  - Loading state with skeleton
-  
-  UI Sections:
-  1. Overall Score Card:
-     - Large circular gauge (0-100)
-     - Color-coded: Green (80+), Yellow (60-79), Red (<60)
-     - Performance trend badge (↗ Improving, ↘ Declining, → Consistent)
-  
-  2. Category Breakdown (Horizontal bar charts):
-     - Technical Accuracy: X/100
-     - Completeness: X/100
-     - Communication: X/100
-  
-  3. Question-by-Question Analysis (Expandable accordion):
-     For each question:
-     - Question text
-     - User's transcript (expandable)
-     - Score and color indicator
-     - AI feedback
-     - Strengths (green checkmarks)
-     - Improvements (yellow suggestions)
-     - Audio playback button (if stored)
-  
-  4. Insights & Recommendations:
-     - Personalized insights from Gemini
-     - Actionable next steps
-     - Learning resource links
-  
-  5. Actions:
-     - Download Report (PDF)
-     - Retake Interview (new session)
-     - Share Report (optional feature)
-```
-
-```typescript
-PSEUDOCODE - Dashboard Page:
-
-DashboardPage Component:
-  Display:
-  - User greeting with name
-  - Statistics cards:
-    * Total interviews taken
-    * Average score
-    * Best performance (job role)
-    * Time spent interviewing
-  
-  - Interview history table:
-    * Date, Job Role, Difficulty, Score, Status
-    * Click row to view report
-    * "Continue" button for IN_PROGRESS interviews
-  
-  - "Start New Interview" prominent button
-  
-  Data:
-  - GET /api/interviews (user's interviews)
-  - Sort by most recent
-  - Pagination (10 per page)
-```
+**Dashboard Page:**
+- User greeting and statistics cards
+- Interview history table with sorting
+- Quick actions (start new interview, continue in-progress)
+- Pagination for interview list
 
 **Acceptance Criteria:**
-✓ Interview creation with custom parameters
-✓ Questions generated by Gemini contextually
-✓ Adaptive difficulty based on performance
-✓ All interview data persisted
-✓ Comprehensive post-interview report
-✓ Personalized insights from Gemini
-✓ Users can only access their own data
-✓ Question generation <5 seconds
-✓ Answer evaluation <3 seconds
-✓ Report generation <2 seconds
+- ✓ Interview creation with custom parameters
+- ✓ Questions generated contextually by Gemini
+- ✓ Adaptive difficulty based on performance
+- ✓ All interview data persisted
+- ✓ Comprehensive post-interview report
+- ✓ Personalized insights from Gemini
+- ✓ Users can only access own data
+- ✓ Question generation <5 seconds
+- ✓ Answer evaluation <3 seconds
+- ✓ Report generation <2 seconds
 
 ***
 
-### **PHASE 4: SECURITY, TESTING & PRODUCTION (Week 4-5)**
+### **PHASE 4: SECURITY, TESTING & PRODUCTION** (Week 4-5)
 
-**Objective**: Harden security, implement comprehensive testing, and prepare for production deployment.
+**Objective**: Harden security, implement comprehensive testing, deploy to production.
 
-**Security Implementation:**
+#### Security Requirements
 
-```typescript
-PSEUDOCODE - Security Measures:
+**Rate Limiting:**
+- Auth endpoints: 5 requests/15min per IP
+- Interview start: 3 requests/hour per user
+- Question generation: 20 requests/hour per session
+- General API: 100 requests/15min per user
+- Use @nestjs/throttler with Redis for distributed systems
 
-1. Rate Limiting:
-   - Auth endpoints: 5 requests/15min per IP
-   - Interview start: 3 requests/hour per user
-   - Question generation: 20 requests/hour per session
-   - General API: 100 requests/15min per user
-   - Use @nestjs/throttler or express-rate-limit
-   - Store limits in Redis for distributed systems
+**Input Validation:**
+- class-validator on all DTOs
+- whitelist: true (strip unknown properties)
+- transform: true (auto-type conversion)
+- Custom validators for business rules
+- DOMPurify for frontend sanitization
 
-2. Input Validation & Sanitization:
-   - class-validator on all DTOs
-   - whitelist: true (strip unknown properties)
-   - transform: true (auto-type conversion)
-   - Custom validators for business rules
-   - Sanitize HTML in frontend with DOMPurify
+**Security Headers:**
+- Content-Security-Policy
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Strict-Transport-Security
+- Use helmet middleware
 
-3. Security Headers (helmet middleware):
-   - Content-Security-Policy: default-src 'self'
-   - X-Frame-Options: DENY
-   - X-Content-Type-Options: nosniff
-   - Strict-Transport-Security: max-age=31536000
+**SQL Injection Prevention:**
+- TypeORM parameterized queries
+- Never concatenate user input
+- Validate all IDs as UUIDs
 
-4. SQL Injection Prevention:
-   - TypeORM parameterized queries (default)
-   - Never concatenate user input into queries
-   - Validate all IDs as UUIDs
+**XSS Protection:**
+- Sanitize user-generated content
+- React JSX escaping
+- DOMPurify for rich text
 
-5. XSS Protection:
-   - Sanitize all user-generated content
-   - Use React's built-in JSX escaping
-   - DOMPurify for rich text
-   - Validate file uploads (if audio storage)
+**CSRF Protection:**
+- SameSite=Strict cookies
+- CSRF tokens for state-changing ops
+- Origin header validation
 
-6. CSRF Protection:
-   - SameSite=Strict on cookies
-   - CSRF tokens for state-changing operations
-   - Validate origin header
+**Audit Logging:**
+- Log auth events
+- Log interview operations
+- Log sensitive data access
+- Include: userId, timestamp, action, result, IP
 
-7. Audit Logging:
-   - Log all auth events (login, register, logout)
-   - Log interview operations (create, start, complete)
-   - Log sensitive data access
-   - Include: userId, timestamp, action, result, IP
-```
+**LiveKit-Specific Security:**
+- Short-lived tokens (1 hour max)
+- Room-specific grants
+- Participant identity validation
+- Room timeout (5 minutes empty)
+- Delete rooms after completion
 
-**Testing Strategy:**
+#### Testing Requirements
 
-```typescript
-PSEUDOCODE - Testing Implementation:
+**Backend Unit Tests (Jest):**
+- Test all service methods in isolation
+- Mock dependencies (repositories, external APIs)
+- Coverage >80%
+- Test suites: AuthService, GeminiService, InterviewsService, QuestionsService
 
-1. Backend Unit Tests (Jest):
-   - Test all service methods in isolation
-   - Mock dependencies (repositories, external APIs)
-   - Test coverage >80%
-   
-   Example test suites:
-   - AuthService: register, login, refresh token
-   - GeminiService: question generation, evaluation
-   - InterviewsService: create, complete, scoring
-   - QuestionsService: adaptive difficulty selection
+**Backend Integration Tests:**
+- Test API endpoints with supertest
+- Use test database
+- Test authentication flows
+- Test WebSocket events if applicable
 
-2. Backend Integration Tests:
-   - Test API endpoints with supertest
-   - Use test database (separate from dev)
-   - Test authentication flows
-   - Test WebSocket events
-   
-   Example tests:
-   - POST /auth/register → 201 Created
-   - POST /auth/login with invalid credentials → 401
-   - POST /interviews without auth → 401
-   - GET /interviews/:id with wrong user → 403
+**Frontend Unit Tests (Vitest + React Testing Library):**
+- Test components in isolation
+- Mock API calls and LiveKit
+- Test user interactions
+- Test suites: LoginPage, InterviewSessionPage, ProtectedRoute
 
-3. Frontend Unit Tests (Vitest + React Testing Library):
-   - Test components in isolation
-   - Mock API calls and WebSocket
-   - Test user interactions
-   
-   Example tests:
-   - LoginPage: Form submission, error handling
-   - InterviewSessionPage: Mic button toggle, transcript update
-   - ProtectedRoute: Redirect when not authenticated
+**E2E Tests (Cypress/Playwright):**
+- Test complete user journeys
+- Registration → login → interview → report
+- Voice recording and transcription flow
+- Use seeded test data
 
-4. E2E Tests (Cypress or Playwright):
-   - Test complete user journeys
-   - Use test environment with seeded data
-   
-   Example flows:
-   - User registration → email verification → login → dashboard
-   - Create interview → complete interview → view report
-   - Voice recording → transcription → evaluation
+**Load Testing (Artillery/k6):**
+- Concurrent interview sessions
+- LiveKit connection limits
+- Database performance
+- API response times under load
 
-5. Load Testing (Artillery or k6):
-   - Concurrent interview sessions
-   - WebSocket connection limits
-   - Database query performance
-   - API response times under load
-```
+**LiveKit Integration Tests:**
+- Agent initialization
+- Question flow orchestration
+- NestJS API integration
+- Error handling
 
-**Production Deployment:**
+#### Production Deployment Requirements
 
-```typescript
-PSEUDOCODE - Deployment Configuration:
+**Environment Setup:**
+- Strong JWT secrets (256-bit random)
+- Managed PostgreSQL (AWS RDS, Google Cloud SQL, etc.)
+- HTTPS enforced
+- CORS whitelist for specific domains
 
-1. Environment Setup:
-   Production .env:
-   - NODE_ENV=production
-   - Strong JWT secrets (256-bit random)
-   - Database: Managed PostgreSQL (AWS RDS, Google Cloud SQL)
-   - HTTPS enforced (Let's Encrypt or cloud provider)
-   - CORS: Specific domain whitelist
+**Database:**
+- Automated migrations in CI/CD
+- Pre-migration backups
+- Staging environment testing
+- Rollback procedures
 
-2. Database Migrations:
-   - Run migrations as part of deployment pipeline
-   - Backup database before migrations
-   - Test migrations in staging first
-   - Rollback plan for failed migrations
+**Docker:**
+- Multi-stage builds for optimization
+- Prune dev dependencies in production
+- Security scan with Trivy
+- .dockerignore configuration
 
-3. Docker Production Images:
-   Multi-stage builds:
-   - Stage 1: Build (npm install, compile TypeScript)
-   - Stage 2: Production (copy dist, prune dev dependencies)
-   - Use .dockerignore to exclude node_modules, .env
-   - Security scan images with Trivy
+**Infrastructure:**
+- Container orchestration (Kubernetes/Docker Swarm)
+- Load balancer for horizontal scaling
+- Redis for caching and rate limiting
+- CDN for static assets
+- S3/equivalent for audio storage (if needed)
 
-4. Infrastructure:
-   - Container orchestration: Kubernetes or Docker Swarm
-   - Load balancer for horizontal scaling
-   - Redis for caching and rate limiting
-   - CDN for static assets
-   - S3 or equivalent for audio storage
+**Monitoring & Observability:**
+- Application monitoring (New Relic, Datadog, Grafana)
+- Log aggregation (ELK stack or cloud)
+- Error tracking (Sentry)
+- Uptime monitoring
+- Key metrics: API response times, WebSocket connections, interview completion rate, Gemini API latency/cost
 
-5. Monitoring & Observability:
-   - Application monitoring: New Relic, Datadog, or open-source Grafana
-   - Log aggregation: ELK stack or cloud provider
-   - Error tracking: Sentry
-   - Uptime monitoring: Pingdom, UptimeRobot
-   - Metrics: Response times, error rates, active users
-   
-   Key metrics to track:
-   - API response times (p50, p95, p99)
-   - WebSocket connection count
-   - Interview completion rate
-   - Gemini API latency and cost
-   - Database query performance
-
-6. CI/CD Pipeline:
-   GitHub Actions / GitLab CI:
-   - On push to main:
-     * Run linters (ESLint, Prettier)
-     * Run unit tests
-     * Run integration tests
-     * Build Docker images
-     * Push to container registry
-   - On push to production branch:
-     * Run E2E tests
-     * Deploy to staging
-     * Manual approval
-     * Deploy to production
-     * Run smoke tests
-   - Rollback on failure
-
-7. Backup & Disaster Recovery:
-   - Automated daily database backups
-   - Retain backups for 30 days
-   - Test restore process monthly
-   - Multi-region deployment for high availability
-```
-
-**Documentation:**
-
-```markdown
-PSEUDOCODE - README.md Structure:
-
-# Voice-Based AI Interview Agent
-
-## Overview
-Brief description of the project
-
-## Architecture
-- System diagram (use Mermaid or link to diagram)
-- Tech stack summary
-- Key design decisions
-
-## Prerequisites
-- Node.js 18+
-- Docker & Docker Compose
-- PostgreSQL 15+
-- Google Gemini API key
-
-## Local Development Setup
-
-### 1. Clone Repository
-git clone <repo-url>
-cd project-root
-
-### 2. Environment Configuration
-cp .env.example .env
-# Edit .env with your credentials
-
-### 3. Install Dependencies
-cd backend && npm install
-cd ../frontend && npm install
-
-### 4. Start Services
-docker-compose up
-
-### 5. Run Migrations
-cd backend && npm run migration:run
-
-### 6. Seed Database (Optional)
-npm run seed
-
-## API Documentation
-- Swagger UI: http://localhost:3000/api/docs
-- Authentication endpoints
-- Interview endpoints
-- WebSocket events
-
-## Frontend Development
-- Development server: npm run dev
-- Build: npm run build
-- Test: npm run test
-
-## Backend Development
-- Development server: npm run start:dev
-- Test: npm run test
-- Test coverage: npm run test:cov
-
-## Deployment
+**CI/CD Pipeline:**
+- Lint and format check
+- Run unit tests
+- Run integration tests
 - Build Docker images
-- Deploy to Kubernetes/Cloud provider
-- Run database migrations
-- Configure environment variables
+- Deploy to staging
+- Run E2E tests
+- Manual approval for production
+- Deploy to production
+- Smoke tests
+- Rollback on failure
 
-## Testing
-- Unit tests: npm run test
-- Integration tests: npm run test:e2e
-- E2E tests: npm run test:e2e:ui
+**Backup & Recovery:**
+- Automated daily database backups
+- 30-day retention
+- Monthly restore testing
+- Multi-region deployment for HA
 
-## Troubleshooting
-Common issues and solutions
-
-## Contributing
-Guidelines for contributions
-
-## License
-MIT License
-```
+**LiveKit Agent Deployment:**
+- Deploy to LiveKit Cloud via CLI
+- Configure scaling (min/max idle agents)
+- Set request timeout (5 minutes)
+- Environment variables for NestJS API URL
 
 **Acceptance Criteria:**
-✓ All security headers implemented
-✓ Rate limiting on sensitive endpoints
-✓ Input validation on all endpoints
-✓ Unit test coverage >80%
-✓ Integration tests for critical flows
-✓ E2E tests for user journeys
-✓ Docker images optimized and scanned
-✓ CI/CD pipeline configured
-✓ Monitoring and logging in place
-✓ Documentation complete
-✓ Production deployment successful
+- ✓ All security headers implemented
+- ✓ Rate limiting on endpoints
+- ✓ Input validation on all endpoints
+- ✓ Unit test coverage >80%
+- ✓ Integration tests passing
+- ✓ E2E tests covering full flows
+- ✓ Docker images optimized and scanned
+- ✓ CI/CD pipeline configured
+- ✓ Monitoring and logging in place
+- ✓ Documentation complete
+- ✓ Production deployment successful
 
 ***
 
-## **FINAL DELIVERABLES**
+## **TECHNOLOGY STACK SUMMARY**
 
-### **Repository Structure**
-```
-/project-root
-  /frontend
-    - Complete React application
-    - Voice recording and playback
-    - Real-time transcription display
-    - Interview session UI
-    - Report generation UI
-  /backend
-    - NestJS API with all endpoints
-    - Gemini API integration
-    - WebSocket gateway
-    - Database migrations
-    - Comprehensive error handling
-  /shared
-    - TypeScript types and interfaces
-  /docs
-    - API documentation
-    - Architecture diagrams
-    - Deployment guides
-  docker-compose.yml
-  README.md
-  .env.example
-```
-
-### **Optional: Demo Video (3-5 minutes)**
-1. Project overview and architecture
-2. User registration and login
-3. Interview setup (job role, difficulty, topics)
-4. Live voice interview demonstration
-5. Real-time transcription
-6. Answer evaluation
-7. Final report with insights
-8. Code walkthrough (highlights)
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Frontend** | React 18 + TypeScript + Vite | UI framework |
+| | LiveKit React Components | Voice UI, visualizers, controls |
+| | TailwindCSS | Styling and responsive design |
+| | Zustand | State management |
+| **Backend** | NestJS + TypeScript | REST API and business logic |
+| | TypeORM | Database ORM |
+| | PostgreSQL | Relational database |
+| | JWT + bcrypt | Authentication |
+| | Winston | Logging |
+| **Voice AI** | LiveKit Agent Platform (Python) | Real-time voice orchestration |
+| | Gemini Live API (via LiveKit) | Natural voice conversation |
+| | LiveKit Turn Detection | Speech detection |
+| | LiveKit Noise Cancellation | Audio enhancement |
+| **AI Services** | Google Gemini API | Question generation, evaluation |
+| **Infrastructure** | LiveKit Cloud | WebRTC transport, agent hosting |
+| | Docker + Docker Compose | Local development |
+| | LiveKit CLI | Agent deployment |
 
 ***
 
 ## **SUCCESS METRICS**
 
-- **Performance**: API response <200ms, Voice latency <500ms, Evaluation <3s
-- **Reliability**: 99.9% uptime, Graceful error handling, Session recovery
-- **Security**: No vulnerabilities, Data encryption, Access control
-- **User Experience**: Intuitive UI, Clear feedback, Natural conversation flow
+- **Performance**: API response <200ms, Voice latency <300ms, Evaluation <3s
+- **Reliability**: 99.9% uptime, Graceful error handling, Auto-reconnection
+- **Security**: No vulnerabilities, E2E encryption, Token-based access
+- **User Experience**: Natural conversation, Clear feedback, No manual controls
 - **Code Quality**: >80% test coverage, TypeScript strict, Well-documented
-- **Scalability**: Horizontal scaling support, Stateless design, Efficient DB queries
+- **Scalability**: Auto-scaling via LiveKit, Stateless design, Efficient queries
 
 ***
 
-## **KEY REMINDERS**
+## **COST ESTIMATION (LiveKit Cloud)**
 
-1. **Never hardcode values** - Use environment variables and configuration
-2. **Think in layers** - Presentation → Business Logic → Data Access
-3. **Error handling everywhere** - Graceful degradation, user-friendly messages
-4. **Security by default** - Validate input, sanitize output, rate limit
-5. **Test as you build** - Don't defer testing to the end
-6. **Document decisions** - Why, not just what
-7. **Iterate and refactor** - Build → Test → Refine
-8. **Monitor from day one** - Logging, metrics, alerts
+**Free Tier:**
+- 1,000 agent session minutes/month
+- ~33 interviews (30 min each)
+- Suitable for MVP and testing
+
+**Production Pricing:**
+- Pay-as-you-go: $0.06/minute per participant
+- 30-min interview ≈ $1.80
+- 1,000 interviews/month ≈ $1,800/month
+- Includes WebRTC infrastructure, agent hosting, global edge network
+
+**Alternative:**
+- Self-host LiveKit Server (open source)
+- Deploy agents to own infrastructure
+- Pay only for compute resources
 
 ***
 
-This comprehensive prompt synthesizes all three roadmaps, incorporates Gemini API throughout, and provides a clear step-by-step implementation path with architectural best practices. Each phase builds on the previous one, with clear deliverables and acceptance criteria.
+## **KEY ARCHITECTURAL DECISIONS**
+
+### **Why LiveKit vs. Custom WebSocket?**
+- **Production-ready**: Powers ChatGPT Advanced Voice Mode
+- **Lower latency**: WebRTC optimized for audio (<300ms vs. 500ms)
+- **Built-in features**: Turn detection, noise cancellation
+- **Auto-scaling**: No infrastructure management
+- **Cost-effective**: Free tier + reasonable production pricing
+
+### **Why Separate Python Agent?**
+- **Native LiveKit support**: Python SDK is mature and feature-complete
+- **Gemini Live API**: Best integration via LiveKit plugin
+- **Separation of concerns**: Voice logic isolated from business logic
+- **Independent scaling**: Agent scales independently of NestJS API
+
+### **Why NestJS for Backend?**
+- **TypeScript**: Type safety across stack
+- **Dependency injection**: Testable, maintainable code
+- **Architecture**: Built-in support for DDD, SOLID
+- **Ecosystem**: Rich plugin ecosystem
+- **Team familiarity**: Current implementation in progress
+
+***
+
+## **NEXT IMMEDIATE STEPS**
+
+1. **Complete Phase 0** (Database + Environment):
+   - Finalize database migrations for all entities
+   - Set up Docker Compose with PostgreSQL
+   - Configure environment variables
+   - Create shared TypeScript types
+   - Set up LiveKit Cloud account and obtain API keys
+
+2. **Begin Phase 1** (Authentication):
+   - Implement User and Auth services in NestJS
+   - Set up JWT strategy and guards
+   - Create frontend auth components
+   - Implement protected routes
+
+3. **Prepare for Phase 2** (LiveKit):
+   - Install LiveKit CLI
+   - Study LiveKit Agent quickstart
+   - Review Gemini Live API documentation
+   - Plan agent-backend integration points
