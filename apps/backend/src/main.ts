@@ -6,6 +6,11 @@ import { LoggerService } from './common/services/logger.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
+/**
+ * Bootstraps and starts the NestJS application with validation, logging, exception handling, and Swagger documentation.
+ *
+ * Configures buffered logging and a shared LoggerService, applies global validation pipe (whitelisting, forbidding unknown properties, and transformation), registers a global logging interceptor and exception filter, sets up Swagger at /api/docs, and listens on the port specified by `process.env.PORT` or 3000.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
