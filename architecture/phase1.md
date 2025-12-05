@@ -989,56 +989,93 @@ import { Throttle } from '@nestjs/throttler';
 
 
 
-# **PHASE 1: AUTHENTICATION & LIVEKIT FOUNDATION**
 
-## **High-Level Overview**
 
-**Objective**: Implement secure JWT-based authentication and establish LiveKit infrastructure for voice communication. This phase bridges the foundation from Phase 0 with the voice AI capabilities needed for Phase 2.
 
-**Focus Areas**:
-- JWT-based authentication with email verification
-- Protected routes and authorization middleware
-- LiveKit Cloud setup and token generation
-- Basic LiveKit room management
-- Frontend authentication UI and state management
-- LiveKit React components integration
 
-**Key Architectural Decision**: Authentication comes before voice features because LiveKit rooms must be associated with authenticated users, and all interview sessions require user identity.
 
-***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# **PHASE 1: AUTHENTICATION & LIVEKIT FOUNDATION - FRONTEND (shadcn/ui Integration)**
 
 ## **PROMPT 2: FRONTEND ENGINEER (Authentication UI & LiveKit Components)**
 
 ### **Objective**
-Implement complete authentication UI with registration, login, and protected routes. Integrate LiveKit React components for voice communication. Set up state management for auth and prepare for interview sessions.
+Implement complete authentication UI using **existing shadcn/ui components** with registration, login, and protected routes. Integrate LiveKit React components for voice communication. Set up state management for auth and prepare for interview sessions.
 
 ### **Project Context**
-You're building the client-side authentication and LiveKit integration for a voice-based AI interview platform. Users must register/login before accessing interview features. The interview session will use LiveKit React components for voice communication with the AI agent (implemented in Phase 2).
+You're building the client-side authentication and LiveKit integration for a voice-based AI interview platform. The project **already has shadcn/ui components installed** (Button, Card, Input, Label, Alert). Users must register/login before accessing interview features. The interview session will use LiveKit React components for voice communication with the AI agent (implemented in Phase 2).
 
-### **Required Technologies**
-- **State Management**: Zustand for global state
-- **Forms**: React Hook Form with Zod validation
-- **LiveKit**: @livekit/components-react for voice UI
-- **Routing**: Next.js App Router with middleware for protected routes
-- **UI**: TailwindCSS + shadcn/ui components
+### **Current shadcn/ui Components Available**
+Based on the repomix output, you have:
+- `components/ui/button.tsx` - Button component with variants
+- `components/ui/card.tsx` - Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+- `components/ui/input.tsx` - Input component
+- `components/ui/label.tsx` - Label component  
+- `components/ui/alert.tsx` - Alert, AlertDescription (assumed from typical shadcn setup)
 
 ***
 
 ### **TASK 1: Install Dependencies**
 
 ```bash
+# Navigate to frontend directory
+cd apps/frontend
+
+# Install required dependencies
 npm install zustand
 npm install react-hook-form @hookform/resolvers zod
 npm install @livekit/components-react livekit-client
 npm install js-cookie
 npm install @types/js-cookie --save-dev
+
+# Install missing shadcn/ui components if needed
+npx shadcn@latest add form
+npx shadcn@latest add alert
+npx shadcn@latest add badge
+npx shadcn@latest add separator
+# If you need these components later
+npx shadcn@latest add skeleton    # For loading states
+npx shadcn@latest add avatar      # For user profiles
+npx shadcn@latest add dropdown-menu  # For nav menus
+npx shadcn@latest add dialog      # For modals
+npx shadcn@latest add toast       # For notifications
 ```
 
 ***
 
 ### **TASK 2: Create Shared Types**
 
-**types/auth.types.ts**:
+Create **`types/auth.types.ts`**:
+
+example script:
+
 ```typescript
 export interface User {
   id: string;
@@ -1072,7 +1109,10 @@ export interface AuthResponse {
 }
 ```
 
-**types/livekit.types.ts**:
+Create **`types/livekit.types.ts`**:
+
+example script:
+
 ```typescript
 export interface LiveKitToken {
   token: string;
@@ -1089,7 +1129,10 @@ export interface LiveKitTokenResponse {
 
 ### **TASK 3: Configure API Client with Auth Interceptors**
 
-Update **lib/api-client.ts**:
+Create **`lib/api-client.ts`**:
+
+example script:
+
 ```typescript
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import Cookies from 'js-cookie';
@@ -1104,7 +1147,7 @@ export const apiClient = axios.create({
 
 // Request interceptor - Add JWT token to requests
 apiClient.interceptors.request.use(
-  (config: InternalAxesRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = Cookies.get('access_token');
     
     if (token) {
@@ -1168,7 +1211,10 @@ apiClient.interceptors.response.use(
 
 ### **TASK 4: Create Auth Service**
 
-**lib/auth.service.ts**:
+Create **`lib/auth.service.ts`**:
+
+example script:
+
 ```typescript
 import { apiClient } from './api-client';
 import Cookies from 'js-cookie';
@@ -1225,7 +1271,10 @@ export class AuthService {
 
 ### **TASK 5: Create LiveKit Service**
 
-**lib/livekit.service.ts**:
+Create **`lib/livekit.service.ts`**:
+
+example script:
+
 ```typescript
 import { apiClient } from './api-client';
 import type { LiveKitTokenResponse } from '@/types/livekit.types';
@@ -1258,7 +1307,10 @@ export class LiveKitService {
 
 ### **TASK 6: Create Auth Store with Zustand**
 
-**store/auth.store.ts**:
+Create **`store/auth.store.ts`**:
+
+example script:
+
 ```typescript
 import { create } from 'zustand';
 import { AuthService } from '@/lib/auth.service';
@@ -1340,7 +1392,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 ### **TASK 7: Create Form Validation Schemas**
 
-**lib/validations/auth.schema.ts**:
+Create **`lib/validations/auth.schema.ts`**:
+
+example script:
+
 ```typescript
 import { z } from 'zod';
 
@@ -1370,9 +1425,12 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 
 ***
 
-### **TASK 8: Create Auth UI Components**
+### **TASK 8: Create Auth UI Components Using shadcn/ui**
 
-**app/register/page.tsx**:
+Create **`app/register/page.tsx`**:
+
+example script:
+
 ```typescript
 'use client';
 
@@ -1381,15 +1439,20 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth.schema';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register: registerUser, error, clearError } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -1415,99 +1478,120 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Start your interview journey</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              {...register('email')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="you@example.com"
-            />
-            {errors.email && (
-              <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-3xl font-bold text-center">Create Account</CardTitle>
+          <CardDescription className="text-center">
+            Start your interview journey
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                {...register('password')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="••••••••"
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                {...register('email')}
+                className={errors.email ? 'border-red-500' : ''}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
-            {errors.password && (
-              <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
-            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('password')}
+                  className={errors.password ? 'border-red-500' : ''}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('confirmPassword')}
+                  className={errors.confirmPassword ? 'border-red-500' : ''}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm">
+            Already have an account?{' '}
+            <Link href="/login" className="font-medium text-primary hover:underline">
+              Sign in
+            </Link>
           </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
-              {...register('confirmPassword')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="••••••••"
-            />
-            {errors.confirmPassword && (
-              <p className="text-red-600 text-sm mt-1">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Creating account...' : 'Create Account'}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Already have an account?{' '}
-          <Link href="/login" className="text-primary font-medium hover:underline">
-            Sign in
-          </Link>
-        </p>
+        </CardContent>
       </Card>
     </div>
   );
 }
 ```
 
-**app/login/page.tsx**:
+Create **`app/login/page.tsx`**:
+
+example script:
+
 ```typescript
 'use client';
 
@@ -1516,10 +1600,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -1546,76 +1634,81 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to continue your interviews</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              {...register('email')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="you@example.com"
-            />
-            {errors.email && (
-              <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
+          <CardDescription className="text-center">
+            Sign in to continue your interviews
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                {...register('password')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="••••••••"
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                {...register('email')}
+                className={errors.email ? 'border-red-500' : ''}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
-            {errors.password && (
-              <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
-            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('password')}
+                  className={errors.password ? 'border-red-500' : ''}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm">
+            Don't have an account?{' '}
+            <Link href="/register" className="font-medium text-primary hover:underline">
+              Create one
+            </Link>
           </div>
-
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Signing in...' : 'Sign In'}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-primary font-medium hover:underline">
-            Create one
-          </Link>
-        </p>
+        </CardContent>
       </Card>
     </div>
   );
@@ -1626,12 +1719,16 @@ export default function LoginPage() {
 
 ### **TASK 9: Create Protected Route Component**
 
-**components/auth/protected-route.tsx**:
+Create **`components/auth/protected-route.tsx`**:
+
+example script:
+
 ```typescript
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -1650,8 +1747,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -1666,18 +1766,23 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 ***
 
-### **TASK 10: Create Basic Dashboard Page**
+### **TASK 10: Create Dashboard Page with shadcn/ui**
 
-**app/dashboard/page.tsx**:
+Create **`app/dashboard/page.tsx`**:
+
+example script:
+
 ```typescript
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { LogOut, User as UserIcon, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 function DashboardContent() {
   const { user, logout } = useAuthStore();
@@ -1689,46 +1794,107 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Interview Dashboard</h1>
-            <Button onClick={handleLogout} variant="outline">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center">
+                <UserIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Interview Dashboard</h1>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+              </div>
+            </div>
+            <Button onClick={handleLogout} variant="outline" className="gap-2">
+              <LogOut className="h-4 w-4" />
               Logout
             </Button>
           </div>
         </div>
-      </nav>
+      </header>
 
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">Welcome, {user?.email}</h2>
-          <p className="text-gray-600">Ready to start your AI interview?</p>
+        {/* Welcome Card */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-2xl">Welcome back! 👋</CardTitle>
+            <CardDescription>
+              Ready to start your AI interview practice?
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button size="lg" className="gap-2">
+              <Clock className="h-5 w-5" />
+              Start New Interview (Coming in Phase 2)
+            </Button>
+          </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-2">Total Interviews</h3>
-            <p className="text-3xl font-bold text-primary">0</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                No interviews yet
+              </p>
+            </CardContent>
           </Card>
 
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-2">Average Score</h3>
-            <p className="text-3xl font-bold text-primary">-</p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Complete an interview to see your score
+              </p>
+            </CardContent>
           </Card>
 
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-2">Completed</h3>
-            <p className="text-3xl font-bold text-primary">0</p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Finish your first interview
+              </p>
+            </CardContent>
           </Card>
         </div>
 
-        <div className="mt-8">
-          <Button size="lg">
-            Start New Interview (Coming in Phase 2)
-          </Button>
-        </div>
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Your latest interview sessions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="rounded-full bg-slate-100 p-4 mb-4">
+                <Clock className="h-8 w-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No interviews yet</h3>
+              <p className="text-muted-foreground mb-4 max-w-sm">
+                Start your first AI interview to practice your skills and get personalized feedback
+              </p>
+              <Badge variant="secondary">Coming in Phase 2</Badge>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
@@ -1745,23 +1911,34 @@ export default function DashboardPage() {
 
 ***
 
-### **TASK 11: Update Landing Page**
+### **TASK 11: Update Landing Page with shadcn/ui**
 
-**app/page.tsx**:
+Update **`app/page.tsx`**:
+
+example script:
+
 ```typescript
 import Link from 'next/link';
+import { Mic, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Navigation */}
+      <nav className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">AI Interview Platform</h1>
-            <div className="space-x-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <Mic className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">AI Interview</h1>
+            </div>
+            <div className="flex gap-3">
               <Link href="/login">
-                <Button variant="outline">Sign In</Button>
+                <Button variant="ghost">Sign In</Button>
               </Link>
               <Link href="/register">
                 <Button>Get Started</Button>
@@ -1771,22 +1948,83 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            Practice Interviews with AI
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Improve your interview skills with our voice-based AI interviewer.
-            Get real-time feedback and detailed performance reports.
-          </p>
-          <Link href="/register">
-            <Button size="lg" className="text-lg px-8 py-6">
-              Start Your First Interview
-            </Button>
-          </Link>
+      {/* Hero Section */}
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="max-w-5xl mx-auto text-center space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 tracking-tight">
+              Practice Interviews <br />
+              <span className="text-primary">with AI</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Improve your interview skills with our voice-based AI interviewer.
+              Get real-time feedback and detailed performance reports.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/register">
+              <Button size="lg" className="text-lg px-8 gap-2">
+                Start Your First Interview
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="text-lg px-8">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-3 gap-6 pt-12">
+            <Card>
+              <CardHeader>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <Mic className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Voice-First Interface</CardTitle>
+                <CardDescription>
+                  Natural conversation with AI using advanced speech recognition
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Real-Time Feedback</CardTitle>
+                <CardDescription>
+                  Get instant analysis and suggestions during your practice sessions
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Detailed Reports</CardTitle>
+                <CardDescription>
+                  Comprehensive performance analysis with actionable insights
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-white/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-center text-sm text-muted-foreground">
+            © 2025 AI Interview Platform. Built with Next.js and LiveKit.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -1794,18 +2032,25 @@ export default function HomePage() {
 
 ***
 
-### **TASK 12: Create LiveKit Test Page (For Phase 2)**
+### **TASK 12: Create LiveKit Test Page**
 
-**app/test-livekit/page.tsx**:
+Create **`app/test-livekit/page.tsx`**:
+
+example script:
+
 ```typescript
 'use client';
 
 import { useState } from 'react';
 import { LiveKitRoom } from '@livekit/components-react';
+import { Mic, Phone, PhoneOff } from 'lucide-react';
 import { LiveKitService } from '@/lib/livekit.service';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import '@livekit/components-styles';
 
 function LiveKitTestContent() {
@@ -1842,50 +2087,96 @@ function LiveKitTestContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <Card className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">LiveKit Connection Test</h1>
-
-        {!connected ? (
-          <div className="space-y-4">
+    <div className="min-h-screen bg-slate-50 p-8">
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <label className="block text-sm font-medium mb-2">Room Name</label>
-              <input
-                type="text"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md"
-                placeholder="test-room-123"
-              />
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Mic className="h-6 w-6" />
+                LiveKit Connection Test
+              </CardTitle>
+              <CardDescription className="mt-2">
+                Test your LiveKit voice connection before starting interviews
+              </CardDescription>
             </div>
-
-            <Button onClick={handleConnect} disabled={loading}>
-              {loading ? 'Connecting...' : 'Connect to Room'}
-            </Button>
+            {connected && (
+              <Badge variant="default" className="gap-1">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                Connected
+              </Badge>
+            )}
           </div>
-        ) : (
-          <div>
-            <div className="mb-4">
-              <p className="text-green-600 font-medium">Connected to: {roomName}</p>
-              <Button onClick={handleDisconnect} variant="outline" className="mt-2">
-                Disconnect
+        </CardHeader>
+        <CardContent>
+          {!connected ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="roomName">Room Name</Label>
+                <Input
+                  id="roomName"
+                  type="text"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  placeholder="test-room-123"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter any room name to test your connection
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleConnect} 
+                disabled={loading}
+                className="w-full gap-2"
+                size="lg"
+              >
+                {loading ? (
+                  <>Connecting...</>
+                ) : (
+                  <>
+                    <Phone className="h-4 w-4" />
+                    Connect to Room
+                  </>
+                )}
               </Button>
             </div>
-
-            <LiveKitRoom
-              token={token}
-              serverUrl={serverUrl}
-              connect={true}
-              audio={true}
-              video={false}
-              className="h-96"
-            >
-              <div className="flex items-center justify-center h-full bg-gray-100 rounded-md">
-                <p className="text-gray-600">LiveKit Room Connected (Audio Only)</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div>
+                  <p className="font-medium text-green-900">Connected to: {roomName}</p>
+                  <p className="text-sm text-green-700">Audio connection active</p>
+                </div>
+                <Button 
+                  onClick={handleDisconnect} 
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <PhoneOff className="h-4 w-4" />
+                  Disconnect
+                </Button>
               </div>
-            </LiveKitRoom>
-          </div>
-        )}
+
+              <LiveKitRoom
+                token={token}
+                serverUrl={serverUrl}
+                connect={true}
+                audio={true}
+                video={false}
+                className="rounded-lg overflow-hidden"
+              >
+                <div className="flex items-center justify-center h-64 bg-slate-100 rounded-md">
+                  <div className="text-center">
+                    <Mic className="h-12 w-12 text-primary mx-auto mb-4" />
+                    <p className="text-lg font-medium">LiveKit Room Connected</p>
+                    <p className="text-sm text-muted-foreground">Audio Only Mode</p>
+                  </div>
+                </div>
+              </LiveKitRoom>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
@@ -1902,97 +2193,56 @@ export default function LiveKitTestPage() {
 
 ***
 
+### **TASK 13: Add Environment Variables**
+
+Create **`.env.local`**:
+
+example script:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+Create **`.env.local.example`**:
+
+example script:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+***
+
 ### **Deliverables**
 
-✓ Registration page with form validation
-✓ Login page with credential validation
-✓ Protected dashboard with user profile
+✓ Registration page with shadcn/ui form components
+✓ Login page with shadcn/ui form components
+✓ Protected dashboard with shadcn/ui cards and badges
 ✓ Auth state management with Zustand
 ✓ API client with JWT interceptors and token refresh
-✓ Cookie-based token storage (HttpOnly recommended for production)
+✓ Cookie-based token storage
 ✓ LiveKit service for token generation
-✓ LiveKit test page for connection verification
-✓ Responsive UI with TailwindCSS
-✓ Error handling and user feedback
+✓ LiveKit test page with shadcn/ui components
+✓ Responsive UI using existing shadcn/ui design system
+✓ Error handling with shadcn/ui Alert components
+✓ Loading states with Lucide React icons
 
 ***
 
 ### **Acceptance Criteria**
 
-✓ User can register with valid email/password
+✓ User can register with valid email/password using shadcn/ui forms
 ✓ User can login with credentials
-✓ Invalid credentials show error message
+✓ Invalid credentials show shadcn/ui Alert component
 ✓ Protected routes redirect to login when unauthenticated
-✓ Dashboard displays user email
+✓ Dashboard displays user email and stats in shadcn/ui Cards
 ✓ Logout clears tokens and redirects to login
 ✓ Token refresh works automatically on 401
-✓ LiveKit test page generates valid token
+✓ LiveKit test page generates valid token with shadcn/ui
 ✓ Form validation displays helpful error messages
 ✓ No TypeScript errors
-✓ Responsive design works on mobile and desktop
+✓ Responsive design works on mobile and desktop using shadcn/ui components
+✓ Password toggle using Lucide icons
+✓ Consistent design system throughout all pages
 
-***
 
-## **PHASE 1 INTEGRATION VERIFICATION**
-
-### **Complete Checklist:**
-
-**Backend Verification:**
-- [ ] POST `/auth/register` creates user successfully
-- [ ] POST `/auth/login` returns valid JWT tokens
-- [ ] POST `/auth/refresh` generates new access token
-- [ ] GET `/auth/me` returns current user with valid JWT
-- [ ] Protected routes return 401 without JWT
-- [ ] POST `/livekit/token` generates valid LiveKit token
-- [ ] POST `/livekit/rooms` creates LiveKit room
-- [ ] Password hashing with bcrypt works
-- [ ] Rate limiting enforced on auth endpoints
-- [ ] Swagger docs updated and accessible
-
-**Frontend Verification:**
-- [ ] Registration form validates input
-- [ ] Login form authenticates user
-- [ ] Dashboard displays after successful login
-- [ ] Logout clears auth state
-- [ ] Protected routes redirect to login
-- [ ] Token refresh works automatically
-- [ ] LiveKit test page connects to room
-- [ ] Error messages display correctly
-- [ ] Responsive design functional
-- [ ] No console errors
-
-**Integration Testing:**
-- [ ] Register → Login → Dashboard flow works
-- [ ] Token expiration triggers refresh
-- [ ] Invalid tokens rejected by backend
-- [ ] LiveKit token generation for authenticated users
-- [ ] Frontend can create and connect to LiveKit rooms
-- [ ] Room cleanup after disconnect
-
-***
-
-## **What's NOT in Phase 1**
-
-- ❌ Email verification (can be added later)
-- ❌ Password reset functionality
-- ❌ Interview creation/management (Phase 2)
-- ❌ Question generation (Phase 2)
-- ❌ LiveKit Python Agent (Phase 2)
-- ❌ Gemini AI integration (Phase 2)
-- ❌ Answer evaluation (Phase 2)
-- ❌ Interview reports (Phase 3)
-- ❌ Social authentication (future)
-- ❌ Advanced rate limiting with Redis (Phase 4)
-
-***
-
-## **Next Steps for Phase 2**
-
-Phase 2 will focus on:
-1. **LiveKit Python Agent** with Gemini Live API integration
-2. **Interview Service** for creating and managing interviews
-3. **Question Generation** using Gemini API
-4. **Voice Communication** between user and agent
-5. **Real-time Transcription** and answer capture
-
-**End of Phase 1**

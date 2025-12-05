@@ -23,7 +23,12 @@ let JwtRefreshStrategy = class JwtRefreshStrategy extends (0, passport_1.Passpor
                 'Please set JWT_REFRESH_SECRET in your .env file before starting the application.');
         }
         super({
-            jwtFromRequest: passport_jwt_1.ExtractJwt.fromBodyField('refreshToken'),
+            jwtFromRequest: passport_jwt_1.ExtractJwt.fromExtractors([
+                (request) => {
+                    return request?.cookies?.refresh_token;
+                },
+                passport_jwt_1.ExtractJwt.fromBodyField('refreshToken'),
+            ]),
             ignoreExpiration: false,
             secretOrKey: secret
         });
