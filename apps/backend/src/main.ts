@@ -19,6 +19,15 @@ async function bootstrap() {
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
+  // Enable CORS
+  const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3001';
+  app.enableCors({
+    origin: frontendOrigin,
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+  });
+
   // Global Pipe for Validation
   app.useGlobalPipes(
     new ValidationPipe({

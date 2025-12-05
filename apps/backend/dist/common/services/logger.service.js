@@ -58,20 +58,42 @@ let LoggerService = class LoggerService {
             ],
         });
     }
-    log(message, context) {
-        this.logger.info(message, { context });
+    log(message, ...optionalParams) {
+        const { context, meta } = this.extractMeta(optionalParams);
+        this.logger.info(message, { context, meta });
     }
-    error(message, trace, context) {
-        this.logger.error(message, { trace, context });
+    error(message, ...optionalParams) {
+        const { context, meta } = this.extractMeta(optionalParams);
+        this.logger.error(message, { context, meta });
     }
-    warn(message, context) {
-        this.logger.warn(message, { context });
+    warn(message, ...optionalParams) {
+        const { context, meta } = this.extractMeta(optionalParams);
+        this.logger.warn(message, { context, meta });
     }
-    debug(message, context) {
-        this.logger.debug(message, { context });
+    debug(message, ...optionalParams) {
+        const { context, meta } = this.extractMeta(optionalParams);
+        this.logger.debug(message, { context, meta });
     }
-    verbose(message, context) {
-        this.logger.verbose(message, { context });
+    verbose(message, ...optionalParams) {
+        const { context, meta } = this.extractMeta(optionalParams);
+        this.logger.verbose(message, { context, meta });
+    }
+    fatal(message, ...optionalParams) {
+        const { context, meta } = this.extractMeta(optionalParams);
+        this.logger.error(message, { context, meta, fatal: true });
+    }
+    extractMeta(params) {
+        if (params.length === 0) {
+            return { meta: [] };
+        }
+        const last = params[params.length - 1];
+        if (typeof last === 'string') {
+            return {
+                context: last,
+                meta: params.slice(0, -1),
+            };
+        }
+        return { meta: params };
     }
 };
 exports.LoggerService = LoggerService;

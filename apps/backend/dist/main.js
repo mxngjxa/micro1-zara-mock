@@ -13,6 +13,13 @@ async function bootstrap() {
     });
     const logger = app.get(logger_service_1.LoggerService);
     app.useLogger(logger);
+    const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3001';
+    app.enableCors({
+        origin: frontendOrigin,
+        credentials: true,
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        allowedHeaders: 'Content-Type, Accept, Authorization',
+    });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
         forbidNonWhitelisted: true,

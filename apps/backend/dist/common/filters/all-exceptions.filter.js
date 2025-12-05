@@ -24,16 +24,22 @@ let AllExceptionsFilter = class AllExceptionsFilter {
         const status = exception instanceof common_1.HttpException
             ? exception.getStatus()
             : common_1.HttpStatus.INTERNAL_SERVER_ERROR;
-        const message = exception instanceof common_1.HttpException
-            ? exception.message
-            : 'Internal server error';
+        const exceptionResponse = exception instanceof common_1.HttpException
+            ? exception.getResponse()
+            : { message: 'Internal server error' };
+        const message = typeof exceptionResponse === 'object' &&
+            exceptionResponse !== null &&
+            'message' in exceptionResponse
+            ? exceptionResponse.message
+            : exceptionResponse;
         const stack = exception instanceof Error ? exception.stack : '';
-        this.logger.error(`HTTP ${status} Error: ${message} - Path: ${request.url}`, stack, 'ExceptionFilter');
+        this.logger.error(`HTTP ${status} Error: ${JSON.stringify(message)} - Path: ${request.url}`, stack, 'ExceptionFilter');
+        const errorResponse = typeof exceptionResponse === 'object' ? exceptionResponse : { message };
         response.status(status).json({
             success: false,
             error: {
                 statusCode: status,
-                message,
+                ...errorResponse,
                 timestamp: new Date().toISOString(),
                 path: request.url,
             },

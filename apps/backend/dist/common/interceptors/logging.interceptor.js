@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoggingInterceptor = void 0;
 const common_1 = require("@nestjs/common");
-const operators_1 = require("rxjs/operators");
+const rxjs_1 = require("rxjs");
 const logger_service_1 = require("../services/logger.service");
 let LoggingInterceptor = class LoggingInterceptor {
     logger;
@@ -22,7 +22,7 @@ let LoggingInterceptor = class LoggingInterceptor {
         const req = context.switchToHttp().getRequest();
         const { method, url } = req;
         const now = Date.now();
-        return next.handle().pipe((0, operators_1.tap)(() => {
+        return next.handle().pipe((0, rxjs_1.tap)(() => {
             const response = context.switchToHttp().getResponse();
             const statusCode = response.statusCode;
             this.logger.log(`${method} ${url} ${statusCode} - ${Date.now() - now}ms`, 'LoggingInterceptor');

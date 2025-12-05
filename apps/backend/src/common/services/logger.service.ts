@@ -23,23 +23,49 @@ export class LoggerService implements NestLoggerService {
     });
   }
 
-  log(message: string, context?: string) {
-    this.logger.info(message, { context });
+  log(message: any, ...optionalParams: any[]) {
+    const { context, meta } = this.extractMeta(optionalParams);
+    this.logger.info(message, { context, meta });
   }
 
-  error(message: string, trace?: string, context?: string) {
-    this.logger.error(message, { trace, context });
+  error(message: any, ...optionalParams: any[]) {
+    const { context, meta } = this.extractMeta(optionalParams);
+    this.logger.error(message, { context, meta });
   }
 
-  warn(message: string, context?: string) {
-    this.logger.warn(message, { context });
+  warn(message: any, ...optionalParams: any[]) {
+    const { context, meta } = this.extractMeta(optionalParams);
+    this.logger.warn(message, { context, meta });
   }
 
-  debug(message: string, context?: string) {
-    this.logger.debug(message, { context });
+  debug(message: any, ...optionalParams: any[]) {
+    const { context, meta } = this.extractMeta(optionalParams);
+    this.logger.debug(message, { context, meta });
   }
 
-  verbose(message: string, context?: string) {
-    this.logger.verbose(message, { context });
+  verbose(message: any, ...optionalParams: any[]) {
+    const { context, meta } = this.extractMeta(optionalParams);
+    this.logger.verbose(message, { context, meta });
+  }
+
+  fatal(message: any, ...optionalParams: any[]) {
+    const { context, meta } = this.extractMeta(optionalParams);
+    this.logger.error(message, { context, meta, fatal: true });
+  }
+
+  private extractMeta(params: any[]): { context?: string; meta: any[] } {
+    if (params.length === 0) {
+      return { meta: [] };
+    }
+
+    const last = params[params.length - 1];
+    if (typeof last === 'string') {
+      return {
+        context: last,
+        meta: params.slice(0, -1),
+      };
+    }
+
+    return { meta: params };
   }
 }

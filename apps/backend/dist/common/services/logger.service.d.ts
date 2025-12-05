@@ -2,9 +2,11 @@ import { LoggerService as NestLoggerService } from '@nestjs/common';
 export declare class LoggerService implements NestLoggerService {
     private logger;
     constructor();
-    log(message: string, context?: string): void;
-    error(message: string, trace?: string, context?: string): void;
-    warn(message: string, context?: string): void;
-    debug(message: string, context?: string): void;
-    verbose(message: string, context?: string): void;
+    log(message: any, ...optionalParams: any[]): void;
+    error(message: any, ...optionalParams: any[]): void;
+    warn(message: any, ...optionalParams: any[]): void;
+    debug(message: any, ...optionalParams: any[]): void;
+    verbose(message: any, ...optionalParams: any[]): void;
+    fatal(message: any, ...optionalParams: any[]): void;
+    private extractMeta;
 }

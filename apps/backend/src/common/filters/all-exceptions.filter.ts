@@ -22,24 +22,34 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
+    const exceptionResponse =
       exception instanceof HttpException
-        ? exception.message
-        : 'Internal server error';
+        ? exception.getResponse()
+        : { message: 'Internal server error' };
+
+    const message =
+      typeof exceptionResponse === 'object' &&
+      exceptionResponse !== null &&
+      'message' in exceptionResponse
+        ? (exceptionResponse as any).message
+        : exceptionResponse;
 
     const stack = exception instanceof Error ? exception.stack : '';
 
     this.logger.error(
-      `HTTP ${status} Error: ${message} - Path: ${request.url}`,
+      `HTTP ${status} Error: ${JSON.stringify(message)} - Path: ${request.url}`,
       stack,
       'ExceptionFilter',
     );
+
+    const errorResponse =
+      typeof exceptionResponse === 'object' ? exceptionResponse : { message };
 
     response.status(status).json({
       success: false,
       error: {
         statusCode: status,
-        message,
+        ...errorResponse,
         timestamp: new Date().toISOString(),
         path: request.url,
       },

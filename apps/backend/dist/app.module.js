@@ -68,6 +68,9 @@ exports.AppModule = AppModule = __decorate([
                     LOG_LEVEL: Joi.string()
                         .valid('error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly')
                         .default('info'),
+                    FRONTEND_ORIGIN: Joi.string()
+                        .uri()
+                        .default('http://localhost:3001'),
                 }),
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
