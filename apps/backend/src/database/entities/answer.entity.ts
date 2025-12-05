@@ -15,8 +15,6 @@ export class Answer {
   @JoinColumn({ name: 'question_id' })
   question!: Question;
 
-  @Column({ nullable: true })
-  created_at_!: Date;
   
   @Column('text')
   transcript!: string;
