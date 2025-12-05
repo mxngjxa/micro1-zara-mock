@@ -12,6 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import '@livekit/components-styles';
 
+/**
+ * Render a client-side UI for testing a LiveKit audio connection by entering a room name and connecting to an audio-only LiveKit room.
+ *
+ * Displays a form to enter a room name and a connect button; when connected it shows connection status, a disconnect action, and embeds a LiveKitRoom configured for audio-only mode. The connect action obtains an access token and server URL from the LiveKit service and updates the component state; the disconnect action clears that state.
+ *
+ * @returns A React element containing the LiveKit connection test interface.
+ */
 function LiveKitTestContent() {
   const [roomName, setRoomName] = useState('');
   const [token, setToken] = useState('');
@@ -141,6 +148,11 @@ function LiveKitTestContent() {
   );
 }
 
+/**
+ * Renders the LiveKit connection tester UI within an authenticated page.
+ *
+ * @returns A React element containing the LiveKit test UI wrapped with route protection.
+ */
 export default function LiveKitTestPage() {
   return (
     <ProtectedRoute>

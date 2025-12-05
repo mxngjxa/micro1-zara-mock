@@ -14,6 +14,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+/**
+ * Render the login page with email/password form, validation, and authentication flow.
+ *
+ * The component displays a centered card containing an email and password form validated by the provided schema,
+ * shows authentication errors from the auth store, allows toggling password visibility, and navigates to /dashboard
+ * after a successful sign-in.
+ *
+ * @returns The rendered login page JSX element.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const { login, error, clearError } = useAuthStore();

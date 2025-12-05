@@ -14,6 +14,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+/**
+ * Render the registration page with a sign-up form and client-side validation.
+ *
+ * The page displays email, password, and confirm-password inputs, inline validation
+ * messages, a global error alert from the auth store, password visibility toggles,
+ * and navigation controls (link to sign in and redirect to the dashboard on success).
+ *
+ * @returns The React element for the registration page UI.
+ */
 export default function RegisterPage() {
   const router = useRouter();
   const { register: registerUser, error, clearError } = useAuthStore();

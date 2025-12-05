@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 
+/**
+ * Protects child content by enforcing authentication and redirecting unauthenticated users to the login page.
+ *
+ * Renders a full-screen loading UI while authentication status is being determined, renders `children` when
+ * authenticated, and renders `null` (after initiating a redirect to `/login`) when not authenticated.
+ *
+ * @param children - The content to render when the user is authenticated
+ * @returns The `children` when authenticated, a loading UI while authentication is in progress, or `null` after initiating a redirect to `/login`
+ */
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
