@@ -12,6 +12,11 @@ const dataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'interview_db',
 });
 
+/**
+ * Fetches the names of tables in the `public` schema of the configured PostgreSQL database and logs them.
+ *
+ * Initializes the TypeORM data source, queries `information_schema.tables` for `public`-schema table names, logs the retrieved names, and closes the data source. Errors encountered during the process are logged to the console.
+ */
 async function checkTables() {
   try {
     await dataSource.initialize();

@@ -12,6 +12,10 @@ const dataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'interview_db',
 });
 
+/**
+ * Connects to the configured database, inspects the 'migrations' table, logs its rows if present, lists public schema tables, and closes the connection.
+ *
+ * Any errors encountered during these checks are logged. */
 async function checkMigrations() {
   try {
     await dataSource.initialize();
