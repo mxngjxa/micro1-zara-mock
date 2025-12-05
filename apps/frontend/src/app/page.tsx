@@ -3,6 +3,15 @@ import { Mic, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+/**
+ * Render the landing page for the AI Interview application.
+ *
+ * The component returns a static, responsive landing page composed of a sticky
+ * navigation bar, hero section with call-to-action buttons, three feature
+ * cards, and a footer.
+ *
+ * @returns The Home page's JSX element representing the landing page layout.
+ */
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">

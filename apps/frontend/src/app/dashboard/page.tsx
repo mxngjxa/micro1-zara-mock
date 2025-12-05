@@ -8,6 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+/**
+ * Renders the authenticated user's dashboard UI with header, stats, welcome card, and recent activity placeholder.
+ *
+ * Clicking the Logout button signs the user out and navigates to the login page.
+ *
+ * @returns The dashboard content as a JSX element.
+ */
 function DashboardContent() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
@@ -124,6 +131,11 @@ function DashboardContent() {
   );
 }
 
+/**
+ * Renders the dashboard page wrapped by a ProtectedRoute to restrict access to authenticated users.
+ *
+ * @returns The dashboard page JSX element wrapped in a ProtectedRoute.
+ */
 export default function DashboardPage() {
   return (
     <ProtectedRoute>
