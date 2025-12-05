@@ -159,14 +159,11 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 Only if time permits:
 - `components/ui/Button.tsx` - Simple button component
 - `components/ui/Card.tsx` - Simple card container
-- Use basic ShadCN logic
+- Use basic ShadCN logic, they are present in:
 
-**9. Development Scripts**
-Verify these scripts in `package.json`:
-- `dev` - Next.js development server
-- `build` - Production build
-- `start` - Start production server
-- `lint` - ESLint check
+components/ui/button.tsx
+components/ui/card.tsx
+
 
 ### **Deliverables**
 ✓ Next.js application running on `http://localhost:3000` (or 3001 if backend uses 3000)
