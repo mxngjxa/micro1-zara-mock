@@ -11,19 +11,19 @@ export class User {
   @Column({ unique: true })
   email!: string;
   
-  @Column()
+  @Column({ select: false })
   password_hash!: string;
   
   @Column({ default: false })
   email_verified!: boolean;
   
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   verification_token!: string;
   
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   reset_token!: string;
   
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamp', nullable: true, select: false })
   reset_token_expires!: Date;
   
   @CreateDateColumn()

@@ -2,25 +2,23 @@
 
 A full-stack AI application that conducts technical interviews through a natural, voice-first conversational interface. This agent interviews candidates in real-time, generates dynamic technical questions, and evaluates responses using AI.
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mxngjxa/micro1-zara-mock?utm_source=oss&utm_medium=github&utm_campaign=mxngjxa%2Fmicro1-zara-mock&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 ## 🚀 Features
 
-- **Voice-First Interface:** Real-time Speech-to-Text (STT) and Text-to-Speech (TTS) for a natural conversational flow.
-- **AI Interview Engine:** Generates context-aware technical questions and evaluates answers on the fly.
-- **Silence Detection:** Automatically triggers the next phase of conversation when the user finishes speaking.
-- **Live Transcript:** Displays active questions and conversation history in real-time.
-- **Secure Architecture:** JWT-based authentication with role-based access control (users only see their own data).
-- **Monorepo Structure:** Unified codebase managing both React frontend and NestJS backend.
+- **Voice-First Interface:** Real-time Speech-to-Text (STT) and Text-to-Speech (TTS) for a natural conversational flow
+- **AI Interview Engine:** Generates context-aware technical questions and evaluates answers on the fly
+- **Silence Detection:** Automatically triggers the next phase of conversation when the user finishes speaking
+- **Live Transcript:** Displays active questions and conversation history in real-time
+- **Secure Architecture:** JWT-based authentication with role-based access control
+- **Monorepo Structure:** Unified codebase managing both React frontend and NestJS backend
 
 ## 🛠 Tech Stack
 
-- **Frontend:** React (Next.js), Tailwind CSS, Lucide React
-- **Backend:** NestJS (REST API), Prisma/TypeORM
+- **Frontend:** Next.js 16, React 19, Tailwind CSS v4, Lucide React
+- **Backend:** NestJS 11, TypeORM 0.3
 - **Database:** PostgreSQL
 - **Authentication:** JWT (JSON Web Tokens)
-- **AI/ML:**
-  - LLM: [INSERT LLM MODEL, e.g., GPT-4o / Claude 3.5]
-  - Speech-to-Text: [INSERT PROVIDER, e.g., Deepgram / Whisper]
-  - Text-to-Speech: [INSERT PROVIDER, e.g., ElevenLabs / OpenAI TTS]
 
 ## 📂 Project Structure
 
@@ -28,92 +26,140 @@ This project uses NPM Workspaces to manage the full-stack implementation.
 
 ```
 ├── apps/
-│   ├── frontend/         # React/Next.js application
+│   ├── frontend/         # Next.js application
 │   └── backend/          # NestJS API server
 ├── packages/
 │   └── shared/           # Shared TypeScript types and DTOs
-├── package.json          # Root configuration
-└── README.md
+└── package.json          # Root configuration with workspace scripts
 ```
 
 ## ⚙️ Prerequisites
 
 - Node.js v18+
-- PostgreSQL (Local or hosted via [INSERT PROVIDER, e.g., Supabase/Neon])
-- API Keys for AI Services ([INSERT SERVICES])
+- PostgreSQL (Local or Docker)
+- API Keys for AI Services (OpenAI, Deepgram, etc.)
 
-## ⚡ Getting Started
+## ⚡ Quick Start
 
-### 1. Clone the Repository
+### 1. Install Dependencies
 
-```bash
-git clone [INSERT_REPO_URL]
-cd [REPO_NAME]
-```
-
-### 2. Install Dependencies
-Install all dependencies for frontend, backend, and shared packages from the root directory:
+From the root directory, install all workspace dependencies:
 
 ```bash
 npm install
 ```
 
-### 3. Environment Configuration
+### 2. Environment Configuration
 
 **Backend (`apps/backend/.env`):**
-Create a `.env` file in the backend directory:
 
 ```bash
-PORT=3001
+PORT=3000
 DATABASE_URL="postgresql://user:password@localhost:5432/interview_db"
-JWT_SECRET="[INSERT_SECURE_SECRET]"
-OPENAI_API_KEY="[INSERT_KEY]"
-DEEPGRAM_API_KEY="[INSERT_KEY]"
+JWT_SECRET="your-secure-secret-key"
+OPENAI_API_KEY="your-openai-key"
+DEEPGRAM_API_KEY="your-deepgram-key"
 ```
 
 **Frontend (`apps/frontend/.env.local`):**
-Create a `.env.local` file in the frontend directory:
 
 ```bash
-NEXT_PUBLIC_API_URL="http://localhost:3001"
-NEXT_PUBLIC_WS_URL="ws://localhost:3001"
+NEXT_PUBLIC_API_URL="http://localhost:3000"
 ```
 
-### 4. Database Setup
-Initialize your database schema:
+### 3. Database Setup
 
-```bash
-# Run migrations (adjust command based on your ORM)
-npm run migrate -w backend
-```
-
-## 🏃‍♂️ Running the Application
-
-You can run the services individually or concurrently.
-
-**Start Database (Postgres)**
+Start PostgreSQL using Docker:
 
 ```bash
 docker compose up -d
 ```
 
-**Start Backend (NestJS):**
+Run database migrations:
 
 ```bash
-npm run dev:backend
-# Server running at http://localhost:3001
+npm run migration:run -w backend
 ```
 
-**Start Frontend (Next.js):**
+Verify migrations (optional):
 
 ```bash
+npx ts-node apps/backend/src/scripts/check-migrations.ts
+```
+
+## 🏃‍♂️ Running the Application
+
+### Option 1: Run Services Separately
+
+**Terminal 1 - Backend (NestJS):**
+```bash
+npm run dev:backend
+# Server runs at http://localhost:3000
+```
+
+**Terminal 2 - Frontend (Next.js):**
+```bash
 npm run dev:frontend
-# Client running at http://localhost:3000
+# Client runs at http://localhost:3001
+```
+
+### Option 2: Development with Watch Mode
+
+Backend supports hot-reload in development:
+```bash
+cd apps/backend
+npm run start:dev
+```
+
+Frontend with custom port:
+```bash
+cd apps/frontend
+npm run dev -- --port 3001
+```
+
+## 🔧 Additional Commands
+
+### Database Migrations
+
+Generate new migration:
+```bash
+npm run migration:generate -w backend src/database/migrations/MigrationName
+```
+
+Revert last migration:
+```bash
+npm run migration:revert -w backend
+```
+
+### Testing
+
+Run all workspace tests:
+```bash
+npm run test
+```
+
+Backend tests:
+```bash
+npm run test -w backend
+npm run test:e2e -w backend
+npm run test:cov -w backend
+```
+
+### Build for Production
+
+Build all workspaces:
+```bash
+npm run build
+```
+
+Start backend in production mode:
+```bash
+npm run start:prod -w backend
 ```
 
 ## 📖 API Documentation
 
-The backend exposes the following key endpoints. A full Swagger/OpenAPI spec is available at `/api/docs` (if enabled).
+The backend exposes the following key endpoints:
 
 | Method | Endpoint | Description |
 |:---|:---|:---|
@@ -125,14 +171,10 @@ The backend exposes the following key endpoints. A full Swagger/OpenAPI spec is 
 
 ## 🧠 AI Configuration
 
-This agent uses **[INSERT_MODEL_NAME]** to drive the interview logic.
-- **Prompt Engineering:** The system prompt is located in `apps/backend/src/ai/prompts/`.
-- **Voice Latency:** We optimize response time by streaming audio chunks using **[INSERT_STREAMING_TECHNIQUE]**.
-
-## 🎥 Demo
-
-[INSERT LINK TO LOOM/YOUTUBE VIDEO HERE]
+- **LLM:** OpenAI GPT models
+- **Speech-to-Text:** Deepgram API
+- **Text-to-Speech:** ElevenLabs or OpenAI TTS
 
 ## 📄 License
 
-[INSERT LICENSE TYPE, e.g., MIT]
+MIT

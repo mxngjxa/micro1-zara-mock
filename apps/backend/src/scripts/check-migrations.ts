@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -17,12 +17,14 @@ const dataSource = new DataSource({
  *
  * Any errors encountered during these checks are logged. */
 async function checkMigrations() {
+  let runner: QueryRunner | undefined;
+
   try {
     await dataSource.initialize();
     console.log('Connected to database.');
-    
+
     // Check migrations table
-    const runner = dataSource.createQueryRunner();
+    runner = dataSource.createQueryRunner();
     const migrationsTableExists = await runner.hasTable('migrations');
     
     if (migrationsTableExists) {
@@ -40,9 +42,16 @@ async function checkMigrations() {
     `);
     console.log('Tables in database:', tables.map((t: any) => t.table_name));
     
-    await dataSource.destroy();
   } catch (error) {
     console.error('Error checking migrations:', error);
+    process.exitCode = 1;
+  } finally {
+    if (runner) {
+      await runner.release();
+    }
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   }
 }
 
