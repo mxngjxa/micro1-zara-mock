@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AccessToken, RoomServiceClient, Room } from 'livekit-server-sdk';
 
@@ -14,6 +14,7 @@ export class LiveKitService {
   private apiKey: string;
   private apiSecret: string;
   private livekitUrl: string;
+  private readonly logger = new Logger(LiveKitService.name)
 
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get<string>('LIVEKIT_API_KEY') || '';
@@ -65,9 +66,10 @@ export class LiveKitService {
   async deleteRoom(roomName: string): Promise<void> {
     try {
       await this.roomService.deleteRoom(roomName);
+      this.logger.log(`Room deleted: ${roomName}`);
     } catch (error: any) {
       // Room might not exist, log but don't throw
-      console.error(`Failed to delete room ${roomName}:`, error.message);
+      this.logger.error(`Failed to delete room ${roomName}: ${error.message}`, error.stack);
     }
   }
 
