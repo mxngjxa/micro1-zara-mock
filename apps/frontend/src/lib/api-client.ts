@@ -51,8 +51,9 @@ apiClient.interceptors.response.use(
         const { access_token, refresh_token } = data.data;
 
         // Update cookies
-        Cookies.set('access_token', access_token, { expires: 1 }); // 1 day
-        Cookies.set('refresh_token', refresh_token, { expires: 7 }); // 7 days
+        const isSecure = process.env.NODE_ENV === 'production';
+        Cookies.set('access_token', access_token, { expires: 1, secure: isSecure, sameSite: 'strict' });
+        Cookies.set('refresh_token', refresh_token, { expires: 7, secure: isSecure, sameSite: 'strict' });
 
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
