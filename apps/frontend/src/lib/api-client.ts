@@ -62,7 +62,9 @@ apiClient.interceptors.response.use(
         // Refresh failed, clear tokens and redirect to login
         Cookies.remove('access_token');
         Cookies.remove('refresh_token');
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
