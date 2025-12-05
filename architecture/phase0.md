@@ -166,7 +166,7 @@ components/ui/card.tsx
 
 
 ### **Deliverables**
-✓ Next.js application running on `http://localhost:3000` (or 3001 if backend uses 3000)
+✓ Next.js application running on `http://localhost:3001`
 ✓ TypeScript strict mode enabled with zero errors
 ✓ Basic landing page displays
 ✓ API client configured with backend base URL
@@ -196,11 +196,11 @@ You're building the API foundation for a voice-based AI interview platform. This
 
 **1. Initialize NestJS Application**
 - Navigate to `/apps/backend` directory
-- Initialize NestJS project: `nest new . --skip-git`
+- The NestJS backend has alread been initialized with `npx @nestjs/cli new backend --skip-git --package-manager npm`
 - Enable TypeScript strict mode in `tsconfig.json`
 - Set up `.env.example` with required variables
 
-**2. Install Core Dependencies Only**
+**2. THESE CORE DEPENDENCIES HAVE ALREADY BEEN INSTALLED**
 ```bash
 npm install @nestjs/config @nestjs/typeorm typeorm pg
 npm install class-validator class-transformer
@@ -208,12 +208,8 @@ npm install winston winston-daily-rotate-file
 npm install @nestjs/swagger
 ```
 
-Do **NOT** install yet:
-- Authentication packages (Phase 1)
-- WebSocket packages (Phase 2)
-- AI SDK packages (Phase 2)
-
 **3. Create Minimal Module Structure**
+verify existing structure if exists
 ```
 /apps/backend/src
   /config
@@ -235,6 +231,8 @@ Do **NOT** install yet:
 ```
 
 **4. Configure Environment Validation**
+
+make your code as generic as possible to allow for future-proofing, sample below:
 ```typescript
 // app.module.ts
 import { ConfigModule } from '@nestjs/config';
@@ -260,6 +258,7 @@ import * as Joi from 'joi';
 ```
 
 **5. Implement Basic Logging (Winston)**
+make your code as generic as possible to allow for future-proofing, sample below:
 ```typescript
 // common/services/logger.service.ts
 import * as winston from 'winston';
@@ -294,6 +293,8 @@ export class LoggerService {
 ```
 
 **6. Configure Database Connection (TypeORM)**
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 // app.module.ts
 TypeOrmModule.forRootAsync({
@@ -313,6 +314,8 @@ TypeOrmModule.forRootAsync({
 ```
 
 **7. Create Global Exception Filter**
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 // common/filters/all-exceptions.filter.ts
 @Catch()
@@ -351,6 +354,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
 ```
 
 **8. Apply Global Validation Pipe**
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 // main.ts
 app.useGlobalPipes(new ValidationPipe({
@@ -382,12 +387,14 @@ export class AppController {
 ```
 
 **10. Set Up Basic Swagger (Optional)**
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 // main.ts
 const config = new DocumentBuilder()
   .setTitle('Interview Agent API')
   .setDescription('Voice-based AI Interview Platform API')
-  .setVersion('1.0')
+  .setVersion('0.1')
   .build();
   
 const document = SwaggerModule.createDocument(app, config);
@@ -447,8 +454,11 @@ You're designing the data layer that will support user authentication (Phase 1),
 - Create `/apps/backend/src/database/migrations` directory for migrations
 
 **2. Define Database Entities**
+make your code as generic as possible to allow for future-proofing, sample below:
 
 **User Entity** (`entities/user.entity.ts`):
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Interview } from './interview.entity';
@@ -491,6 +501,8 @@ export class User {
 ```
 
 **Interview Entity** (`entities/interview.entity.ts`):
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
@@ -547,6 +559,8 @@ export class Interview {
 ```
 
 **Question Entity** (`entities/question.entity.ts`):
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { Interview } from './interview.entity';
@@ -597,6 +611,8 @@ export class Question {
 ```
 
 **Answer Entity** (`entities/answer.entity.ts`):
+make your code as generic as possible to allow for future-proofing, sample below:
+
 ```typescript
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { Question } from './question.entity';
@@ -643,7 +659,7 @@ export class Answer {
 ```
 
 **3. Create Indexes**
-Add indexes to entities using decorators:
+Add indexes to entities using decorators, ensure coherence with previous files:
 ```typescript
 // In User entity
 @Index('IDX_user_email', ['email'])
@@ -662,6 +678,7 @@ Add indexes to entities using decorators:
 ```
 
 **4. Generate Initial Migration**
+
 ```bash
 npm run typeorm migration:generate -- -n InitialSchema
 ```
@@ -684,8 +701,8 @@ Add to `package.json`:
 }
 ```
 
-**6. Create Minimal Seed Data (Optional)**
-**Only** if time permits, create:
+**6. Create Minimal Seed Data**
+ create a test case:
 - 1 test user (email: test@example.com, password: hashed "Password123!")
 - Document credentials in README
 - Do NOT create interview/question seed data yet (Phase 1+)
