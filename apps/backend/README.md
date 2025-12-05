@@ -96,3 +96,28 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+
+
+# Database 
+
+## Migration
+
+Generate initial migration.
+```bash
+TS_NODE_PROJECT=tsconfig.cli.json npx typeorm-ts-node-commonjs migration:generate -d src/config/database.config.ts src/database/migrations/InitialSchema
+```
+
+If the migration looks correct, it will create the `users`, `interviews`, `questions`, and `answers` tables with the specified columns, indexes, and relationships. It should also includes the necessary enum types and foreign key constraints with `ON DELETE CASCADE`.
+
+``` bash
+TS_NODE_PROJECT=tsconfig.cli.json npx typeorm-ts-node-commonjs migration:run -d src/config/database.config.ts
+```
+
+Runnig the above configuration should confirm that there are no migrations necessary.
+
+
+Run this to check if migrations were successfully applied by querying the migrations table and checking for the existence of the created tables.
+```bash
+npx ts-node apps/backend/src/scripts/check-migrations.ts 
+```

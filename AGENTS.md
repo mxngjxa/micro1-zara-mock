@@ -8,7 +8,7 @@
 Production-grade voice-first AI interview platform conducting technical interviews through natural conversation using LiveKit's Agent Platform and Google Gemini Live API.
 
 **Core Technologies:**
-- **Frontend**: React 18 + TypeScript + Vite + TailwindCSS + LiveKit React Components
+- **Frontend**: React 19 + TypeScript + NextJS 16 + TailwindCSS + LiveKit React Components
 - **Backend**: NestJS + TypeScript + REST API
 - **Voice AI**: LiveKit Agent Platform (Python) + Gemini Live API
 - **Database**: PostgreSQL + TypeORM
@@ -29,6 +29,23 @@ Production-grade voice-first AI interview platform conducting technical intervie
 7. **Security First** - Defense-in-depth, input validation, rate limiting
 8. **Observability** - Comprehensive logging with Winston
 9. **Strictly TypeScript** - `"strict": true,` in all `tsconfig.json` files
+
+***
+
+Testing Order
+
+```bash
+docker compose up -d 
+```
+
+```bash
+npm run dev:backend
+```
+
+```bash
+npm run dev:frontend
+```
+
 
 ***
 
