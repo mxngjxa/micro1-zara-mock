@@ -1,3 +1,8 @@
+/**
+ * Page component that renders a centered landing placeholder for the voice-based AI interview platform.
+ *
+ * @returns The page's JSX element: a full-viewport centered main container with the title "Voice-Based AI Interview Platform" and a "Coming Soon" subtitle.
+ */
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-24">
