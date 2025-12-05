@@ -26,9 +26,9 @@ export default function HomePage() {
               <h1 className="text-2xl font-bold text-gray-900">AI Interview</h1>
             </div>
             <div className="flex gap-3">
-              <Link href="/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
+              <Button variant="ghost" asChild>
+                <Link href="/login">Sign In</Link>
+              </Button>
               <Link href="/register">
                 <Button>Get Started</Button>
               </Link>
