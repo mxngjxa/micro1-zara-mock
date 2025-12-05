@@ -20,6 +20,10 @@ export class LiveKitService {
     this.apiSecret = this.configService.get<string>('LIVEKIT_API_SECRET') || '';
     this.livekitUrl = this.configService.get<string>('LIVEKIT_URL') || '';
 
+    if (!this.apiKey || !this.apiSecret || !this.livekitUrl) {
+      throw new Error('LiveKit configuration is incomplete. Please set LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL');
+    }
+
     this.roomService = new RoomServiceClient(
       this.livekitUrl,
       this.apiKey,
