@@ -90,9 +90,6 @@ export class InterviewsService {
       throw new NotFoundException('Interview not found');
     }
 
-    if (interview.status !== 'PENDING' && interview.status !== 'IN_PROGRESS') {
-       // Allow resuming IN_PROGRESS interviews, but creating new room token
-    }
     
     // Check if completed
     if (interview.status === 'COMPLETED') {
