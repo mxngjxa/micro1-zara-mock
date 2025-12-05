@@ -789,6 +789,3 @@ The following features are **intentionally excluded** and will be added in subse
 ❌ State management (Zustand/React Query) → **Phase 1**  
 
 **Phase 0 Success = Working foundation with database connectivity, ready for Phase 1 authentication implementation.**
-
-[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/d423c828-fbc2-4ff2-a4f3-6927764b3e33/ARCHITECTURE.md)
-[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/d1e4a3a7-71a6-4cd5-96e8-039844a9c9ad/phase0.md)
