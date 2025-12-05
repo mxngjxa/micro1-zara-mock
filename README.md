@@ -45,14 +45,16 @@ This project uses NPM Workspaces to manage the full-stack implementation.
 ## ⚡ Getting Started
 
 ### 1. Clone the Repository
-```
+
+```bash
 git clone [INSERT_REPO_URL]
 cd [REPO_NAME]
 ```
 
 ### 2. Install Dependencies
 Install all dependencies for frontend, backend, and shared packages from the root directory:
-```
+
+```bash
 npm install
 ```
 
@@ -60,7 +62,8 @@ npm install
 
 **Backend (`apps/backend/.env`):**
 Create a `.env` file in the backend directory:
-```
+
+```bash
 PORT=3001
 DATABASE_URL="postgresql://user:password@localhost:5432/interview_db"
 JWT_SECRET="[INSERT_SECURE_SECRET]"
@@ -70,14 +73,16 @@ DEEPGRAM_API_KEY="[INSERT_KEY]"
 
 **Frontend (`apps/frontend/.env.local`):**
 Create a `.env.local` file in the frontend directory:
-```
+
+```bash
 NEXT_PUBLIC_API_URL="http://localhost:3001"
 NEXT_PUBLIC_WS_URL="ws://localhost:3001"
 ```
 
 ### 4. Database Setup
 Initialize your database schema:
-```
+
+```bash
 # Run migrations (adjust command based on your ORM)
 npm run migrate -w backend
 ```
@@ -86,14 +91,22 @@ npm run migrate -w backend
 
 You can run the services individually or concurrently.
 
-**Start Backend (NestJS):**
+**Start Database (Postgres)**
+
+```bash
+docker compose up -d
 ```
+
+**Start Backend (NestJS):**
+
+```bash
 npm run dev:backend
 # Server running at http://localhost:3001
 ```
 
 **Start Frontend (Next.js):**
-```
+
+```bash
 npm run dev:frontend
 # Client running at http://localhost:3000
 ```

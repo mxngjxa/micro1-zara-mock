@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:frontend": "npm run dev -w frontend",
+    "dev:frontend": "npm run dev -w frontend -- --port 3001",
     "dev:backend": "npm run start:dev -w backend",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces"
@@ -16,6 +16,15 @@
     "concurrently": "^8.0.0"
   },
   "dependencies": {
-    "axios": "^1.13.2"
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/swagger": "^11.2.3",
+    "@nestjs/typeorm": "^11.0.0",
+    "axios": "^1.13.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
+    "pg": "^8.16.3",
+    "typeorm": "^0.3.28",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }
