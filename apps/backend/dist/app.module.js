@@ -44,15 +44,24 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const Joi = __importStar(require("joi"));
+const throttler_1 = require("@nestjs/throttler");
+const core_1 = require("@nestjs/core");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const logger_service_1 = require("./common/services/logger.service");
+const auth_module_1 = require("./auth/auth.module");
+const users_module_1 = require("./users/users.module");
+const livekit_module_1 = require("./livekit/livekit.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            throttler_1.ThrottlerModule.forRoot([{
+                    ttl: 60000,
+                    limit: 10
+                }]),
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
                 validationSchema: Joi.object({
@@ -71,6 +80,14 @@ exports.AppModule = AppModule = __decorate([
                     FRONTEND_ORIGIN: Joi.string()
                         .uri()
                         .default('http://localhost:3001'),
+                    JWT_SECRET: Joi.string().min(32).required(),
+                    JWT_EXPIRATION: Joi.string().default('24h'),
+                    JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+                    JWT_REFRESH_EXPIRATION: Joi.string().default('7d'),
+                    LIVEKIT_URL: Joi.string().uri().required(),
+                    LIVEKIT_API_KEY: Joi.string().required(),
+                    LIVEKIT_API_SECRET: Joi.string().required(),
+                    FRONTEND_URL: Joi.string().uri().required(),
                 }),
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
@@ -87,9 +104,19 @@ exports.AppModule = AppModule = __decorate([
                 }),
                 inject: [config_1.ConfigService],
             }),
+            auth_module_1.AuthModule,
+            users_module_1.UsersModule,
+            livekit_module_1.LiveKitModule,
         ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService, logger_service_1.LoggerService],
+        providers: [
+            app_service_1.AppService,
+            logger_service_1.LoggerService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_1.ThrottlerGuard
+            }
+        ],
         exports: [logger_service_1.LoggerService],
     })
 ], AppModule);

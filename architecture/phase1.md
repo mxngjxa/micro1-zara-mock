@@ -34,6 +34,8 @@ You're building the authentication layer and LiveKit integration for a voice-bas
 
 ### **TASK 1: Install Dependencies**
 
+THE FOLLOWING COMMANDS WERE ALREADY EXECUTED. 
+
 ```bash
 npm install @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt
 npm install livekit-server-sdk
@@ -116,6 +118,9 @@ validationSchema: Joi.object({
 ### **TASK 4: Implement DTOs with Validation**
 
 **auth/dto/register.dto.ts**:
+
+sample script:
+
 ```typescript
 import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -136,6 +141,9 @@ export class RegisterDto {
 ```
 
 **auth/dto/login.dto.ts**:
+
+sample script:
+
 ```typescript
 import { IsEmail, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -152,6 +160,9 @@ export class LoginDto {
 ```
 
 **auth/dto/refresh-token.dto.ts**:
+
+sample script:
+
 ```typescript
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -168,6 +179,9 @@ export class RefreshTokenDto {
 ### **TASK 5: Implement Users Service**
 
 **users/users.service.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -222,6 +236,9 @@ export class UsersService {
 ```
 
 **users/users.module.ts**:
+
+sample script:
+
 ```typescript
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -241,6 +258,9 @@ export class UsersModule {}
 ### **TASK 6: Implement Auth Service**
 
 **auth/auth.service.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -346,6 +366,9 @@ export class AuthService {
 ### **TASK 7: Implement JWT Strategies**
 
 **auth/strategies/jwt.strategy.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
@@ -379,6 +402,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 ```
 
 **auth/strategies/jwt-refresh.strategy.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
@@ -407,6 +433,9 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
 ### **TASK 8: Implement Guards and Decorators**
 
 **auth/guards/jwt-auth.guard.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -435,6 +464,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 ```
 
 **auth/guards/jwt-refresh.guard.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -468,6 +500,9 @@ export const CurrentUser = createParamDecorator(
 ### **TASK 9: Implement Auth Controller**
 
 **auth/auth.controller.ts**:
+
+sample script:
+
 ```typescript
 import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -535,6 +570,9 @@ export class AuthController {
 ### **TASK 10: Configure Auth Module**
 
 **auth/auth.module.ts**:
+
+sample script:
+
 ```typescript
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
@@ -562,6 +600,9 @@ export class AuthModule {}
 
 ### **TASK 11: Apply Global JWT Guard**
 
+sample script:
+
+
 Update `main.ts`:
 ```typescript
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -585,6 +626,9 @@ async function bootstrap() {
 ### **TASK 12: Implement LiveKit Service**
 
 **livekit/livekit.service.ts**:
+
+sample script:
+
 ```typescript
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -680,6 +724,9 @@ export class LiveKitService {
 ### **TASK 13: Implement LiveKit DTOs**
 
 **livekit/dto/create-room.dto.ts**:
+
+sample script:
+
 ```typescript
 import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -715,6 +762,9 @@ export class GetTokenDto {
 ### **TASK 14: Implement LiveKit Controller**
 
 **livekit/livekit.controller.ts**:
+
+sample script:
+
 ```typescript
 import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -801,6 +851,9 @@ export class LiveKitController {
 ### **TASK 15: Configure LiveKit Module**
 
 **livekit/livekit.module.ts**:
+
+sample script:
+
 ```typescript
 import { Module } from '@nestjs/common';
 import { LiveKitService } from './livekit.service';
@@ -834,11 +887,17 @@ import { LiveKitModule } from './livekit/livekit.module';
 
 ### **TASK 16: Add Rate Limiting (Optional but Recommended)**
 
+THE FOLLOWING COMMAND WAS ALREADY EXECUTED
+
 ```bash
 npm install @nestjs/throttler
 ```
 
 Update `app.module.ts`:
+
+sample script:
+
+
 ```typescript
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -861,6 +920,9 @@ import { APP_GUARD } from '@nestjs/core';
 ```
 
 Apply stricter rate limiting to auth endpoints in controller:
+
+sample script:
+
 ```typescript
 import { Throttle } from '@nestjs/throttler';
 
@@ -1934,8 +1996,3 @@ Phase 2 will focus on:
 5. **Real-time Transcription** and answer capture
 
 **End of Phase 1**
-
-[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/32f88403-664c-4c80-81ef-1fa6e154a820/architect.md)
-[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/f2a45b7e-d247-46ca-b1c7-0adaa53d4e3e/repomix-output.xml)
-[3](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/9fd86433-4c5b-48c6-a16a-ac603b127fba/ARCHITECTURE.md)
-[4](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/c0e82a3c-aa9c-42c3-8506-1775c7e1a55c/phase0.md)

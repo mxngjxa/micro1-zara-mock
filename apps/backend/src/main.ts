@@ -1,10 +1,11 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { LoggerService } from './common/services/logger.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 /**
  * Bootstraps and starts the NestJS application with validation, logging, exception handling, and Swagger documentation.
@@ -43,11 +44,16 @@ async function bootstrap() {
   // Global Filter for Exceptions
   app.useGlobalFilters(new AllExceptionsFilter(logger));
 
+  // Global JWT Guard
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
+
   // Swagger Configuration
   const config = new DocumentBuilder()
     .setTitle('Interview Agent API')
     .setDescription('Voice-based AI Interview Platform API')
     .setVersion('0.1')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
