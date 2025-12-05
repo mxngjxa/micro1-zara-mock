@@ -29,7 +29,7 @@ export class AnswersService {
 
     try {
       // Find question by ID with interview relation
-      const question = await this.questionRepository.findOne({
+      const question = await queryRunner.manager.findOne(Question, {
         where: { id: createDto.question_id },
         relations: ['interview'],
       });
@@ -39,7 +39,7 @@ export class AnswersService {
       }
 
       // Check if answer already exists
-      const existingAnswer = await this.answerRepository.findOne({
+      const existingAnswer = await queryRunner.manager.findOne(Answer, {
         where: { question_id: createDto.question_id },
       });
 
