@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query, UseGuards, Request, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { InterviewsService } from './interviews.service';
 import { CreateInterviewDto } from './dto/create-interview.dto';
@@ -75,11 +75,13 @@ export class InterviewsController {
   @Post(':id/complete')
   @ApiOperation({ summary: 'Complete interview and calculate final scores' })
   async completeInterview(
-    @CurrentUser() user: any, // We might need this to verify ownership if not done in service
+    @CurrentUser() user: any,
     @Param('id') interviewId: string
   ) {
-    // Ideally verify user owns interview here or in service
-    const interview = await this.interviewsService.completeInterview(interviewId);
+    const interview = await this.interviewsService.completeInterview(
+      user.id,
+      interviewId
+    );
     return { success: true, data: interview };
   }
 
