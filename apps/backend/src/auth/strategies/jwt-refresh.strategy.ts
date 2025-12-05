@@ -7,10 +7,19 @@ import { JwtPayload } from '../auth.service';
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor(private configService: ConfigService) {
+    const secret = configService.get<string>('JWT_REFRESH_SECRET');
+    
+    if (!secret || secret.trim() === '') {
+      throw new Error(
+        'JWT_REFRESH_SECRET is not defined in environment variables. ' +
+        'Please set JWT_REFRESH_SECRET in your .env file before starting the application.'
+      );
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_REFRESH_SECRET') || 'fallback_refresh_secret'
+      secretOrKey: secret
     });
   }
 
