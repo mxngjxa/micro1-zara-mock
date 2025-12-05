@@ -1,7 +1,6 @@
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -19,7 +18,7 @@ export declare class AuthController {
             tokens: import("./auth.service").AuthTokens;
         };
     }>;
-    refresh(refreshTokenDto: RefreshTokenDto, user: any): Promise<{
+    refresh(user: any): Promise<{
         success: boolean;
         data: import("./auth.service").AuthTokens;
     }>;

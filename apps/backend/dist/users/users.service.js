@@ -76,7 +76,10 @@ let UsersService = class UsersService {
         });
     }
     async findById(id) {
-        return this.usersRepository.findOne({ where: { id } });
+        return this.usersRepository.findOne({
+            where: { id },
+            select: ['id', 'email', 'email_verified', 'created_at', 'updated_at', 'last_login']
+        });
     }
     async validatePassword(user, password) {
         return bcrypt.compare(password, user.password_hash);

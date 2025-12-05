@@ -19,20 +19,21 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     configService;
     authService;
     constructor(configService, authService) {
+        const secret = configService.get('JWT_SECRET');
+        if (!secret || secret.trim() === '') {
+            throw new Error('JWT_SECRET is not defined in environment variables. ' +
+                'Please set JWT_SECRET in your .env file before starting the application.');
+        }
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get('JWT_SECRET') || 'fallback_secret'
+            secretOrKey: secret
         });
         this.configService = configService;
         this.authService = authService;
     }
     async validate(payload) {
-        const user = await this.authService.validateUser(payload.sub);
-        if (!user) {
-            throw new common_1.UnauthorizedException();
-        }
-        return user;
+        return await this.authService.validateUser(payload.sub);
     }
 };
 exports.JwtStrategy = JwtStrategy;

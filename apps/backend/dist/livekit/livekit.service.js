@@ -8,22 +8,27 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var LiveKitService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LiveKitService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const livekit_server_sdk_1 = require("livekit-server-sdk");
-let LiveKitService = class LiveKitService {
+let LiveKitService = LiveKitService_1 = class LiveKitService {
     configService;
     roomService;
     apiKey;
     apiSecret;
     livekitUrl;
+    logger = new common_1.Logger(LiveKitService_1.name);
     constructor(configService) {
         this.configService = configService;
         this.apiKey = this.configService.get('LIVEKIT_API_KEY') || '';
         this.apiSecret = this.configService.get('LIVEKIT_API_SECRET') || '';
         this.livekitUrl = this.configService.get('LIVEKIT_URL') || '';
+        if (!this.apiKey || !this.apiSecret || !this.livekitUrl) {
+            throw new Error('LiveKit configuration is incomplete. Please set LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL');
+        }
         this.roomService = new livekit_server_sdk_1.RoomServiceClient(this.livekitUrl, this.apiKey, this.apiSecret);
     }
     async generateToken(options) {
@@ -56,9 +61,10 @@ let LiveKitService = class LiveKitService {
     async deleteRoom(roomName) {
         try {
             await this.roomService.deleteRoom(roomName);
+            this.logger.log(`Room deleted: ${roomName}`);
         }
         catch (error) {
-            console.error(`Failed to delete room ${roomName}:`, error.message);
+            this.logger.error(`Failed to delete room ${roomName}: ${error.message}`, error.stack);
         }
     }
     async listRooms() {
@@ -79,7 +85,7 @@ let LiveKitService = class LiveKitService {
     }
 };
 exports.LiveKitService = LiveKitService;
-exports.LiveKitService = LiveKitService = __decorate([
+exports.LiveKitService = LiveKitService = LiveKitService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], LiveKitService);

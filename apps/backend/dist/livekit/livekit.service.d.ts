@@ -11,6 +11,7 @@ export declare class LiveKitService {
     private apiKey;
     private apiSecret;
     private livekitUrl;
+    private readonly logger;
     constructor(configService: ConfigService);
     generateToken(options: LiveKitTokenOptions): Promise<string>;
     createRoom(roomName: string, emptyTimeout?: number): Promise<Room>;

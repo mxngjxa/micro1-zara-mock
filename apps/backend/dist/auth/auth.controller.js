@@ -18,7 +18,6 @@ const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
-const refresh_token_dto_1 = require("./dto/refresh-token.dto");
 const public_decorator_1 = require("./decorators/public.decorator");
 const current_user_decorator_1 = require("./decorators/current-user.decorator");
 const jwt_refresh_guard_1 = require("./guards/jwt-refresh.guard");
@@ -42,7 +41,7 @@ let AuthController = class AuthController {
             data: result
         };
     }
-    async refresh(refreshTokenDto, user) {
+    async refresh(user) {
         const tokens = await this.authService.refreshTokens(user.userId);
         return {
             success: true,
@@ -81,10 +80,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, common_1.Post)('refresh'),
     (0, swagger_1.ApiOperation)({ summary: 'Refresh access token' }),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [refresh_token_dto_1.RefreshTokenDto, Object]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refresh", null);
 __decorate([

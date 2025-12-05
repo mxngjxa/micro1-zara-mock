@@ -17,10 +17,15 @@ const config_1 = require("@nestjs/config");
 let JwtRefreshStrategy = class JwtRefreshStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt-refresh') {
     configService;
     constructor(configService) {
+        const secret = configService.get('JWT_REFRESH_SECRET');
+        if (!secret || secret.trim() === '') {
+            throw new Error('JWT_REFRESH_SECRET is not defined in environment variables. ' +
+                'Please set JWT_REFRESH_SECRET in your .env file before starting the application.');
+        }
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromBodyField('refreshToken'),
             ignoreExpiration: false,
-            secretOrKey: configService.get('JWT_REFRESH_SECRET') || 'fallback_refresh_secret'
+            secretOrKey: secret
         });
         this.configService = configService;
     }
