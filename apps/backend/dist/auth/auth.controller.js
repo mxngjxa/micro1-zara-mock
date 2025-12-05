@@ -27,25 +27,50 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async register(registerDto) {
+    setCookies(res, access_token, refresh_token) {
+        res.cookie('access_token', access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+        res.cookie('refresh_token', refresh_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+    }
+    async register(registerDto, res) {
         const result = await this.authService.register(registerDto);
+        this.setCookies(res, result.tokens.access_token, result.tokens.refresh_token);
         return {
             success: true,
-            data: result
+            data: { user: result.user }
         };
     }
-    async login(loginDto) {
+    async login(loginDto, res) {
         const result = await this.authService.login(loginDto);
+        this.setCookies(res, result.tokens.access_token, result.tokens.refresh_token);
         return {
             success: true,
-            data: result
+            data: { user: result.user }
         };
     }
-    async refresh(user) {
-        const tokens = await this.authService.refreshTokens(user.userId);
+    async logout(res) {
+        res.clearCookie('access_token');
+        res.clearCookie('refresh_token');
         return {
             success: true,
-            data: tokens
+            message: 'Logged out successfully'
+        };
+    }
+    async refresh(user, res) {
+        const tokens = await this.authService.refreshTokens(user.userId);
+        this.setCookies(res, tokens.access_token, tokens.refresh_token);
+        return {
+            success: true,
+            message: 'Tokens refreshed'
         };
     }
     async getProfile(user) {
@@ -61,8 +86,9 @@ __decorate([
     (0, common_1.Post)('register'),
     (0, swagger_1.ApiOperation)({ summary: 'Register new user' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
@@ -71,18 +97,28 @@ __decorate([
     (0, common_1.Post)('login'),
     (0, swagger_1.ApiOperation)({ summary: 'Login user' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('logout'),
+    (0, swagger_1.ApiOperation)({ summary: 'Logout user' }),
+    __param(0, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, common_1.Post)('refresh'),
     (0, swagger_1.ApiOperation)({ summary: 'Refresh access token' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refresh", null);
 __decorate([

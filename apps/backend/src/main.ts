@@ -1,6 +1,7 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { LoggerService } from './common/services/logger.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -19,6 +20,9 @@ async function bootstrap() {
 
   const logger = app.get(LoggerService);
   app.useLogger(logger);
+
+  // Parse Cookies
+  app.use(cookieParser());
 
   // Enable CORS
   const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3001';

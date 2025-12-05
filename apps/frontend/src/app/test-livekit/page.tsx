@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import '@livekit/components-styles';
 
 /**
@@ -25,13 +26,15 @@ function LiveKitTestContent() {
   const [serverUrl, setServerUrl] = useState('');
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleConnect = async () => {
     if (!roomName) {
-      alert('Please enter a room name');
+      setError('Please enter a room name');
       return;
     }
 
+    setError(null);
     setLoading(true);
 
     try {
@@ -39,8 +42,8 @@ function LiveKitTestContent() {
       setToken(livekitToken);
       setServerUrl(url);
       setConnected(true);
-    } catch (error: any) {
-      alert(`Failed to connect: ${error.message}`);
+    } catch (err: any) {
+      setError(`Failed to connect: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -77,13 +80,21 @@ function LiveKitTestContent() {
         <CardContent>
           {!connected ? (
             <div className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="roomName">Room Name</Label>
                 <Input
                   id="roomName"
                   type="text"
                   value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
+                  onChange={(e) => {
+                    setRoomName(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="test-room-123"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -91,8 +102,8 @@ function LiveKitTestContent() {
                 </p>
               </div>
 
-              <Button 
-                onClick={handleConnect} 
+              <Button
+                onClick={handleConnect}
                 disabled={loading}
                 className="w-full gap-2"
                 size="lg"

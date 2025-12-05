@@ -1,8 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const app_module_1 = require("./app.module");
 const logger_service_1 = require("./common/services/logger.service");
 const logging_interceptor_1 = require("./common/interceptors/logging.interceptor");
@@ -14,6 +18,7 @@ async function bootstrap() {
     });
     const logger = app.get(logger_service_1.LoggerService);
     app.useLogger(logger);
+    app.use((0, cookie_parser_1.default)());
     const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3001';
     app.enableCors({
         origin: frontendOrigin,

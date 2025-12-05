@@ -54,18 +54,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
-    if (!AuthService.isAuthenticated()) {
-      set({ isAuthenticated: false, user: null });
-      return;
-    }
-
     set({ isLoading: true });
     
     try {
       const user = await AuthService.getCurrentUser();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
-      await AuthService.logout();
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },

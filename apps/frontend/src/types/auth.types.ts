@@ -25,6 +25,5 @@ export interface AuthResponse {
   success: boolean;
   data: {
     user: User;
-    tokens: AuthTokens;
   };
 }
