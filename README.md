@@ -20,7 +20,6 @@
 ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?logo=swagger&logoColor=black)
 ![Jest](https://img.shields.io/badge/Jest-Testing-C21325?logo=jest&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-9.18.0-4B32C3?logo=eslint&logoColor=white)
-![Prettier](https://img.shields.io/badge/Prettier-3.4.2-F7B93E?logo=prettier&logoColor=black)
 
 A full-stack AI application that conducts technical interviews through a natural, voice-first conversational interface. This agent interviews candidates in real-time, generates dynamic technical questions, and evaluates responses using AI.
 
