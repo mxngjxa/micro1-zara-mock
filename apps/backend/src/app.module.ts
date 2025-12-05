@@ -2,12 +2,22 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerService } from './common/services/logger.service';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { LiveKitModule } from './livekit/livekit.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 10 // 10 requests per minute
+    }]),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -26,6 +36,14 @@ import { LoggerService } from './common/services/logger.service';
         FRONTEND_ORIGIN: Joi.string()
           .uri()
           .default('http://localhost:3001'),
+        JWT_SECRET: Joi.string().min(32).required(),
+        JWT_EXPIRATION: Joi.string().default('24h'),
+        JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+        JWT_REFRESH_EXPIRATION: Joi.string().default('7d'),
+        LIVEKIT_URL: Joi.string().uri().required(),
+        LIVEKIT_API_KEY: Joi.string().required(),
+        LIVEKIT_API_SECRET: Joi.string().required(),
+        FRONTEND_URL: Joi.string().uri().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -42,9 +60,23 @@ import { LoggerService } from './common/services/logger.service';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
+    UsersModule,
+    LiveKitModule,
   ],
   controllers: [AppController],
-  providers: [AppService, LoggerService],
+  providers: [
+    AppService,
+    LoggerService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard
+    }
+  ],
   exports: [LoggerService],
 })
 export class AppModule {}
