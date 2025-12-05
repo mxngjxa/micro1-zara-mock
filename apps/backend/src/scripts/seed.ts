@@ -20,6 +20,14 @@ const dataSource = new DataSource({
   synchronize: false,
 });
 
+/**
+ * Seed the database by running migrations and ensuring a test user exists.
+ *
+ * Connects to the configured data source, executes pending migrations, and ensures a user
+ * with email "test@example.com" exists. If the user is missing, a test user is created
+ * with a placeholder hashed password and the email marked as verified. The data source
+ * connection is closed when finished. On error, the process exits with code 1.
+ */
 async function seed() {
   try {
     console.log('Connecting to database...');

@@ -12,6 +12,12 @@ const dataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'interview_db',
 });
 
+/**
+ * Attempts to initialize the configured TypeORM DataSource and then close it, logging the outcome.
+ *
+ * Initializes the global `dataSource` to verify database connectivity; logs a success message on successful connection
+ * or an error message if initialization fails, and ensures the data source is destroyed afterward.
+ */
 async function testConnection() {
   try {
     await dataSource.initialize();
