@@ -163,14 +163,14 @@ export class InterviewsService {
     };
   }
 
-  async completeInterview(interviewId: string) {
+  async completeInterview(userId: string, interviewId: string) {
     const interview = await this.interviewRepository.findOne({
-      where: { id: interviewId },
+      where: { id: interviewId, user_id: userId },
       relations: ['questions', 'questions.answer'],
     });
 
     if (!interview) {
-      throw new NotFoundException('Interview not found');
+      throw new NotFoundException('Interview not found or access denied');
     }
 
     // Calculate overall score
