@@ -42,6 +42,9 @@ export class Question {
   @CreateDateColumn()
   created_at!: Date;
   
+  @UpdateDateColumn()
+  updated_at!: Date;
+  
   @OneToOne(() => Answer, answer => answer.question, { cascade: true })
   answer!: Answer;
 }
