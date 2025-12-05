@@ -10,6 +10,7 @@ import { LoggerService } from './common/services/logger.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LiveKitModule } from './livekit/livekit.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -70,6 +71,10 @@ import { LiveKitModule } from './livekit/livekit.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard
     }
   ],
   exports: [LoggerService],
