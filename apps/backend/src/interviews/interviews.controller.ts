@@ -87,10 +87,14 @@ export class InterviewsController {
   @Public()
   @Get('agent/:id')
   @ApiOperation({ summary: 'Get interview details for agent' })
+  @ApiQuery({ name: 'room_name', required: true })
   async getInterviewForAgent(
-    @Param('id') interviewId: string,
+    @Param('id', ParseUUIDPipe) interviewId: string,
     @Query('room_name') roomName: string
   ) {
+    if (!roomName) {
+      throw new BadRequestException('room_name is required');
+    }
     const interview = await this.interviewsService.getInterviewForAgent(
       interviewId,
       roomName
