@@ -10,6 +10,10 @@ import { LoggerService } from './common/services/logger.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LiveKitModule } from './livekit/livekit.module';
+import { GeminiModule } from './gemini/gemini.module';
+import { InterviewsModule } from './interviews/interviews.module';
+import { QuestionsModule } from './questions/questions.module';
+import { AnswersModule } from './answers/answers.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -44,6 +48,9 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
         LIVEKIT_API_KEY: Joi.string().required(),
         LIVEKIT_API_SECRET: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),
+        GOOGLE_API_KEY: Joi.string().required(),
+        GEMINI_MODEL: Joi.string().default('gemini-1.5-flash'),
+        GEMINI_TEMPERATURE: Joi.number().min(0).max(1).default(0.7),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -63,6 +70,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     AuthModule,
     UsersModule,
     LiveKitModule,
+    GeminiModule,
+    InterviewsModule,
+    QuestionsModule,
+    AnswersModule,
   ],
   controllers: [AppController],
   providers: [

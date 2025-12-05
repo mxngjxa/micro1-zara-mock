@@ -14,6 +14,7 @@ export class Answer {
   @OneToOne(() => Question, question => question.answer, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'question_id' })
   question!: Question;
+
   
   @Column('text')
   transcript!: string;

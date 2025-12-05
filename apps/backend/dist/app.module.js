@@ -52,6 +52,10 @@ const logger_service_1 = require("./common/services/logger.service");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const livekit_module_1 = require("./livekit/livekit.module");
+const gemini_module_1 = require("./gemini/gemini.module");
+const interviews_module_1 = require("./interviews/interviews.module");
+const questions_module_1 = require("./questions/questions.module");
+const answers_module_1 = require("./answers/answers.module");
 const jwt_auth_guard_1 = require("./auth/guards/jwt-auth.guard");
 let AppModule = class AppModule {
 };
@@ -89,6 +93,9 @@ exports.AppModule = AppModule = __decorate([
                     LIVEKIT_API_KEY: Joi.string().required(),
                     LIVEKIT_API_SECRET: Joi.string().required(),
                     FRONTEND_URL: Joi.string().uri().required(),
+                    GOOGLE_API_KEY: Joi.string().required(),
+                    GEMINI_MODEL: Joi.string().default('gemini-1.5-flash'),
+                    GEMINI_TEMPERATURE: Joi.number().min(0).max(1).default(0.7),
                 }),
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
@@ -108,6 +115,10 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             livekit_module_1.LiveKitModule,
+            gemini_module_1.GeminiModule,
+            interviews_module_1.InterviewsModule,
+            questions_module_1.QuestionsModule,
+            answers_module_1.AnswersModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [
