@@ -2238,7 +2238,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 ✓ Dashboard displays user email and stats in shadcn/ui Cards
 ✓ Logout clears tokens and redirects to login
 ✓ Token refresh works automatically on 401
-✓ LiveKit test page generates valid token with shadcn/ui interface
+✓ LiveKit test page generates valid token with shadcn/ui
 ✓ Form validation displays helpful error messages
 ✓ No TypeScript errors
 ✓ Responsive design works on mobile and desktop using shadcn/ui components
