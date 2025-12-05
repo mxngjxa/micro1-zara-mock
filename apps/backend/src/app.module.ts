@@ -12,7 +12,7 @@ import { UsersModule } from './users/users.module';
 import { LiveKitModule } from './livekit/livekit.module';
 import { GeminiModule } from './gemini/gemini.module';
 import { InterviewsModule } from './interviews/interviews.module';
-import { QuestionsModule } from 'questions/questions.module.ts';
+import { QuestionsModule } from './questions/questions.module';
 import { AnswersModule } from './answers/answers.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
