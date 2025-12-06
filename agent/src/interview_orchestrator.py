@@ -50,20 +50,26 @@ class InterviewOrchestrator:
             )
             
             if not self.interview_data:
-                logger.error("Failed to fetch interview data")
+                logger.error("Failed to fetch interview data - got None")
                 return False
             
+            # API returns snake_case field names
             self.questions = self.interview_data.get("questions", [])
+            if not self.questions:
+                logger.error(f"No questions found in interview data: {self.interview_data.keys()}")
+                return False
+            
             # Sort questions by order field if available
             self.questions.sort(key=lambda x: x.get("order", 0))
             
-            # Resume from last completed question
-            completed_count = self.interview_data.get("completedQuestions", 0)
+            # Resume from last completed question (API uses snake_case)
+            completed_count = self.interview_data.get("completed_questions", 0)
             if completed_count > 0 and completed_count < len(self.questions):
                 self.current_question_index = completed_count
             
+            # API returns snake_case: job_role, difficulty
             logger.info(
-                f"Interview initialized: {self.interview_data.get('jobRole')} "
+                f"Interview initialized: {self.interview_data.get('job_role')} "
                 f"({self.interview_data.get('difficulty')}) "
                 f"with {len(self.questions)} questions"
             )
@@ -79,7 +85,8 @@ class InterviewOrchestrator:
             logger.error("Cannot start interview: Not initialized")
             return
         
-        job_role = self.interview_data.get("jobRole", "unknown role")
+        # API returns snake_case field names
+        job_role = self.interview_data.get("job_role", "unknown role")
         difficulty = self.interview_data.get("difficulty", "standard")
         question_count = len(self.questions)
         
@@ -88,11 +95,12 @@ class InterviewOrchestrator:
             f"We'll be conducting a {difficulty} level interview for the {job_role} position. "
             f"I have {question_count} questions prepared. "
             f"Please answer each question to the best of your ability. "
+            f"Take your time to think before you answer. "
             f"Let's begin!"
         )
         
         await session.generate_reply(instructions=greeting)
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(2.0)  # Give more time before first question
         await self.ask_next_question(session)
     
     async def ask_next_question(self, session: Any):
@@ -218,7 +226,7 @@ class InterviewOrchestrator:
         await asyncio.sleep(2.0)
         
         if self.interview_id:
-            await self.nestjs_client.complete_interview(self.interview_id)
+            await self.nestjs_client.complete_interview(self.interview_id, self.room_name)
     
     async def handle_error(self, error: Exception):
         """Handle errors gracefully"""

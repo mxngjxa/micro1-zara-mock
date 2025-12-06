@@ -297,6 +297,91 @@ export class InterviewsService {
     };
   }
 
+  async completeInterviewByAgent(interviewId: string) {
+    const interview = await this.interviewRepository.findOne({
+      where: { id: interviewId },
+      relations: ['questions', 'questions.answer'],
+    });
+
+    if (!interview) {
+      throw new NotFoundException('Interview not found');
+    }
+
+    // Calculate overall score
+    let totalScore = 0;
+    let answerCount = 0;
+    const scores: number[] = [];
+    const answerDetails: any[] = [];
+
+    interview.questions.forEach((q) => {
+      if (q.answer) {
+        if (q.answer.score !== null) {
+          totalScore += q.answer.score;
+          answerCount++;
+          scores.push(q.answer.score);
+
+          answerDetails.push({
+            question: q.content,
+            answer: q.answer.transcript,
+            evaluation: {
+              score: q.answer.score,
+              feedback: q.answer.feedback,
+              ...(q.answer.evaluation_json || {}),
+            },
+          });
+        }
+      }
+    });
+
+    const overallScore =
+      answerCount > 0 ? Math.round(totalScore / answerCount) : 0;
+
+    // Calculate duration
+    let durationMinutes = 0;
+    if (interview.started_at) {
+      const endTime = new Date();
+      durationMinutes = Math.round(
+        (endTime.getTime() - interview.started_at.getTime()) / 60000,
+      );
+    }
+
+    // Analyze performance trend
+    let performanceTrend = 'CONSISTENT';
+    if (scores.length >= 2) {
+      const mid = Math.floor(scores.length / 2);
+      const firstHalf = scores.slice(0, mid);
+      const secondHalf = scores.slice(mid);
+
+      const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+      const secondAvg =
+        secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+      if (secondAvg > firstAvg + 10) performanceTrend = 'IMPROVING';
+      else if (secondAvg < firstAvg - 10) performanceTrend = 'DECLINING';
+    }
+
+    // Generate comprehensive report
+    let report = null;
+    if (answerDetails.length > 0) {
+      report = await this.geminiService.generateInterviewReport(
+        interview.job_role,
+        interview.difficulty,
+        answerDetails,
+      );
+    }
+
+    interview.status = 'COMPLETED';
+    interview.completed_at = new Date();
+    interview.overall_score = overallScore;
+    interview.duration_minutes = durationMinutes;
+    interview.performance_trend = performanceTrend;
+    interview.report = report || {};
+
+    await this.interviewRepository.save(interview);
+
+    return interview;
+  }
+
   async getInterviewById(userId: string, interviewId: string) {
     const interview = await this.interviewRepository.findOne({
       where: { id: interviewId, user_id: userId },

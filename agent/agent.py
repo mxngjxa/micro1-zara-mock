@@ -43,21 +43,26 @@ async def entrypoint(ctx: agents.JobContext):
         await ctx.connect()
         logger.info(f"Connected to room {ctx.room.name}")
         
-        # Create AgentSession with Google components
-        # Note: livekit-plugins-google reads GOOGLE_API_KEY from environment automatically
+        # Create AgentSession with Google Gemini Live API (RealtimeModel)
+        # RealtimeModel handles STT, LLM, and TTS in one integrated model
+        # Uses GOOGLE_API_KEY environment variable for authentication
         session = AgentSession(
-            stt=google.STT(),  # Uses GOOGLE_API_KEY env var
-            llm=google.LLM(
-                model=config.gemini_model,
-                temperature=config.gemini_temperature,
-            ),
-            tts=google.TTS(
+            llm=google.realtime.RealtimeModel(
+                model="gemini-2.0-flash-exp",
                 voice=config.gemini_voice,
+                temperature=config.gemini_temperature,
+                instructions=(
+                    "You are a professional technical interviewer. "
+                    "Ask questions clearly and wait for complete answers. "
+                    "Be encouraging and professional. Do not interrupt the candidate. "
+                    "Acknowledge answers briefly before moving on."
+                ),
             ),
+            # VAD for turn detection - increased silence duration for interview context
             vad=silero.VAD.load(
                 min_speech_duration=0.5,
-                min_silence_duration=1.0,
-                padding_duration=0.3,
+                min_silence_duration=2.0,  # Wait 2 seconds of silence before considering turn complete
+                prefix_padding_duration=0.3,  # Renamed from padding_duration
             ),
         )
         
@@ -107,7 +112,7 @@ async def entrypoint(ctx: agents.JobContext):
         )
         
         await asyncio.sleep(1)
-        await orchestrator.start_interview()
+        await orchestrator.start_interview(session)
         
         # Wait until disconnected
         disconnect_event = asyncio.Event()

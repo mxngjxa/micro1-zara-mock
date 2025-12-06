@@ -119,4 +119,28 @@ export class InterviewsController {
     );
     return { success: true, data: interview };
   }
+
+  // AGENT ENDPOINT for completing interview
+  @Public()
+  @Post('agent/:id/complete')
+  @ApiOperation({ summary: 'Complete interview (agent endpoint)' })
+  @ApiQuery({ name: 'room_name', required: true })
+  async completeInterviewForAgent(
+    @Param('id', ParseUUIDPipe) interviewId: string,
+    @Query('room_name') roomName: string,
+  ) {
+    if (!roomName) {
+      throw new BadRequestException('room_name is required');
+    }
+    // Validate room name matches interview
+    const expectedRoomName = `interview-${interviewId}`;
+    if (roomName !== expectedRoomName) {
+      throw new BadRequestException('Invalid room name for this interview');
+    }
+    // Get interview without user check, complete it
+    const interview = await this.interviewsService.completeInterviewByAgent(
+      interviewId,
+    );
+    return { success: true, data: interview };
+  }
 }

@@ -27,22 +27,13 @@ export class AnswersController {
   constructor(private readonly answersService: AnswersService) {}
 
   @Post()
+  @Public() // Allow agent to submit answers without JWT
   @ApiOperation({ summary: 'Submit an answer and trigger evaluation' })
   @ApiResponse({ status: 201, description: 'Answer submitted successfully' })
-  // Agent might need to call this, so we might need to allow Public or AgentAuth.
-  // For now assuming the Python agent calls this with a token or we make it public for simplicity in Phase 3 demo
-  // But ideally, this comes from the Frontend (user confirming transcript) OR the Agent automatically submitting.
-  // Given the flow: User talks -> Agent receives audio -> Agent gets transcript -> Agent/User submits answer.
-  // Let's assume the Agent submits it. The Agent can have a special token or we just make it Public for now but protected by room logic later.
-  // Actually, the instructions say "Answer creation with transcript".
-  // Let's keep it authenticated for now, assuming the frontend submits it after the user confirms, OR the agent submits it.
-  // If Agent submits, it needs a way to auth.
-  // For simplicity: Public but validated by logic.
-  // TODO: Implement agent authentication or room validation
-  // @UseGuards(AgentAuthGuard)
   async createAnswer(@Body() createDto: CreateAnswerDto) {
     // Validate question belongs to active interview
-    return this.answersService.createAnswer(createDto);
+    const answer = await this.answersService.createAnswer(createDto);
+    return { success: true, data: answer };
   }
 
   @Get('interview/:interviewId')
