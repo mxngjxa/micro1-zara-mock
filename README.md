@@ -1,7 +1,6 @@
-Based on the comprehensive repository state, here's a complete project-wide README with proper environment placeholders:
-
-```markdown
 # 🎙️ Voice-Based AI Interview Agent
+
+Essentiall, a mid clone of `micro1`'s zara ai interview agent.
 
 ![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16.0.7-000000?logo=next.js&logoColor=white)
