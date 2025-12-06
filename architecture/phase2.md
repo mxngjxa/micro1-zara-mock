@@ -56,7 +56,7 @@ example code is provided here, please implement according to existing code
 
 # Google Gemini API
 GOOGLE_API_KEY=your-gemini-api-key-here
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
 GEMINI_TEMPERATURE=0.7
 ```
 
@@ -66,7 +66,7 @@ Update **`config/app.config.ts`** validation schema:
 validationSchema: Joi.object({
   // ... existing validation
   GOOGLE_API_KEY: Joi.string().required(),
-  GEMINI_MODEL: Joi.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: Joi.string().default('gemini-2.5-flash'),
   GEMINI_TEMPERATURE: Joi.number().min(0).max(1).default(0.7)
 })
 ```
@@ -121,7 +121,7 @@ CLASS GeminiService:
   CONSTRUCTOR:
     - Inject ConfigService
     - Initialize GoogleGenerativeAI client with API key from config
-    - Set model name from config (default: gemini-1.5-flash)
+    - Set model name from config (default: gemini-2.5-flash)
     - Set temperature from config (default: 0.7)
   
   METHOD generateQuestions(jobRole, difficulty, topics, count):

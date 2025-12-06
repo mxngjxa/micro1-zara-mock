@@ -49,7 +49,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
         LIVEKIT_API_SECRET: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),
         GOOGLE_API_KEY: Joi.string().required(),
-        GEMINI_MODEL: Joi.string().default('gemini-1.5-flash'),
+        GEMINI_MODEL: Joi.string().default('gemini-2.5-flash'),
         GEMINI_TEMPERATURE: Joi.number().min(0).max(1).default(0.7),
       }),
     }),

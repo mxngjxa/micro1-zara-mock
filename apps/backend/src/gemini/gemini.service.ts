@@ -27,7 +27,7 @@ export class GeminiService {
     const apiKey = this.configService.get<string>('GOOGLE_API_KEY');
     const modelName = this.configService.get<string>(
       'GEMINI_MODEL',
-      'gemini-1.5-flash',
+      'gemini-2.5-flash',
     );
 
     if (!apiKey) {
