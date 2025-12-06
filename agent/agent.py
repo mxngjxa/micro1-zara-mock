@@ -1,26 +1,43 @@
 """
-Interview Agent using Google STT and TTS plugins.
+Interview Agent using Deepgram STT and TTS plugins.
 
 This agent conducts structured technical interviews using pre-generated questions
 from the backend. It uses:
-- Google STT for speech-to-text transcription (via chirp_2)
-- Google TTS for text-to-speech output (Studio voice)
+- Deepgram STT for speech-to-text transcription (nova-2)
+- Deepgram TTS for text-to-speech output (aura-asteria-en)
 - Silero VAD for voice activity detection
 
 NOTE: We do NOT use LLM for automatic responses. The orchestrator
 controls ALL speech output via session.say() to ensure questions
 are asked exactly as written from the backend.
+
+Credentials:
+- Deepgram: Requires DEEPGRAM_API_KEY env var
+- Optionally, set GOOGLE_APPLICATION_CREDENTIALS for Google STT/TTS
 """
 
 import asyncio
 import logging
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions
-from livekit.plugins import google, silero, noise_cancellation
+from livekit.plugins import silero, noise_cancellation
 
 from src.config import config
 from src.api_client import NestJSClient
 from src.interview_orchestrator import InterviewOrchestrator
+
+# Try to import providers - we'll use what's available
+try:
+    from livekit.plugins import deepgram
+    DEEPGRAM_AVAILABLE = True
+except ImportError:
+    DEEPGRAM_AVAILABLE = False
+
+try:
+    from livekit.plugins import google
+    GOOGLE_AVAILABLE = True
+except ImportError:
+    GOOGLE_AVAILABLE = False
 
 
 logging.basicConfig(level=config.log_level)
@@ -82,18 +99,65 @@ async def entrypoint(ctx: agents.JobContext):
         # Create AgentSession with STT, TTS, and VAD ONLY
         # We intentionally DO NOT include LLM to prevent automatic responses
         # All speech output is controlled via session.say() by the orchestrator
-        session = AgentSession(
-            # STT for transcribing user speech (Google Cloud Speech-to-Text)
-            stt=google.STT(
+        
+        # Determine STT provider based on available credentials
+        stt_instance = None
+        tts_instance = None
+        
+        # Priority: Deepgram (API key auth) > Google (service account auth)
+        if config.deepgram_api_key and DEEPGRAM_AVAILABLE:
+            logger.info("Using Deepgram STT and TTS")
+            stt_instance = deepgram.STT(
+                api_key=config.deepgram_api_key,
+                model="nova-2",
+                language="en",
+            )
+            tts_instance = deepgram.TTS(
+                api_key=config.deepgram_api_key,
+                model="aura-asteria-en",  # Female voice, natural sounding
+            )
+        elif config.google_credentials_file and GOOGLE_AVAILABLE:
+            logger.info(f"Using Google STT/TTS with credentials file: {config.google_credentials_file}")
+            stt_instance = google.STT(
+                credentials_file=config.google_credentials_file,
                 model=config.stt_model,
                 languages=[config.stt_language],
                 spoken_punctuation=True,
-            ),
-            # TTS for speaking responses (Google Cloud Text-to-Speech)
-            tts=google.TTS(
+            )
+            tts_instance = google.TTS(
+                credentials_file=config.google_credentials_file,
                 voice_name=config.tts_voice,
                 language=config.tts_language,
-            ),
+            )
+        elif GOOGLE_AVAILABLE:
+            # Try Google with Application Default Credentials
+            logger.info("Attempting Google STT/TTS with Application Default Credentials")
+            try:
+                stt_instance = google.STT(
+                    model=config.stt_model,
+                    languages=[config.stt_language],
+                    spoken_punctuation=True,
+                )
+                tts_instance = google.TTS(
+                    voice_name=config.tts_voice,
+                    language=config.tts_language,
+                )
+            except ValueError as e:
+                logger.error(f"Google STT/TTS initialization failed: {e}")
+                logger.error(
+                    "Please set DEEPGRAM_API_KEY (recommended), "
+                    "or set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON file, "
+                    "or run 'gcloud auth application-default login'."
+                )
+                raise
+        else:
+            raise RuntimeError(
+                "No STT/TTS provider available. Please set DEEPGRAM_API_KEY or configure Google Cloud credentials."
+            )
+        
+        session = AgentSession(
+            stt=stt_instance,
+            tts=tts_instance,
             # VAD for turn detection - longer silence for interviews
             vad=silero.VAD.load(
                 min_speech_duration=0.5,
