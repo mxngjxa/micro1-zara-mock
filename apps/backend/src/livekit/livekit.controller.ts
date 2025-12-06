@@ -17,15 +17,15 @@ export class LiveKitController {
     const token = await this.livekitService.generateToken({
       roomName: getTokenDto.roomName,
       participantName: user.email,
-      participantId: user.id
+      participantId: user.id,
     });
 
     return {
       success: true,
       data: {
         token,
-        url: this.livekitService.getLiveKitUrl()
-      }
+        url: this.livekitService.getLiveKitUrl(),
+      },
     };
   }
 
@@ -34,12 +34,12 @@ export class LiveKitController {
   async createRoom(@Body() createRoomDto: CreateRoomDto) {
     const room = await this.livekitService.createRoom(
       createRoomDto.roomName,
-      createRoomDto.emptyTimeout
+      createRoomDto.emptyTimeout,
     );
 
     return {
       success: true,
-      data: room
+      data: room,
     };
   }
 
@@ -50,7 +50,7 @@ export class LiveKitController {
 
     return {
       success: true,
-      data: rooms
+      data: rooms,
     };
   }
 
@@ -61,7 +61,7 @@ export class LiveKitController {
 
     return {
       success: true,
-      data: room
+      data: room,
     };
   }
 
@@ -72,7 +72,7 @@ export class LiveKitController {
 
     return {
       success: true,
-      message: `Room ${roomName} deleted`
+      message: `Room ${roomName} deleted`,
     };
   }
 }

@@ -7,6 +7,6 @@ import { LiveKitController } from './livekit.controller';
   imports: [ConfigModule],
   providers: [LiveKitService],
   controllers: [LiveKitController],
-  exports: [LiveKitService]
+  exports: [LiveKitService],
 })
 export class LiveKitModule {}

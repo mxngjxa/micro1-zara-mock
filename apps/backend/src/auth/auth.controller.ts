@@ -9,13 +9,16 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { Throttle } from '@nestjs/throttler';
 
-
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  private setCookies(res: Response, access_token: string, refresh_token: string) {
+  private setCookies(
+    res: Response,
+    access_token: string,
+    refresh_token: string,
+  ) {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -33,26 +36,39 @@ export class AuthController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register new user' })
-  async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.register(registerDto);
-    this.setCookies(res, result.tokens.access_token, result.tokens.refresh_token);
+    this.setCookies(
+      res,
+      result.tokens.access_token,
+      result.tokens.refresh_token,
+    );
     return {
       success: true,
-      data: { user: result.user }
+      data: { user: result.user },
     };
   }
-
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 requests per 15 minutes
   @Post('login')
   @ApiOperation({ summary: 'Login user' })
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.login(loginDto);
-    this.setCookies(res, result.tokens.access_token, result.tokens.refresh_token);
+    this.setCookies(
+      res,
+      result.tokens.access_token,
+      result.tokens.refresh_token,
+    );
     return {
       success: true,
-      data: { user: result.user }
+      data: { user: result.user },
     };
   }
 
@@ -63,7 +79,7 @@ export class AuthController {
     res.clearCookie('refresh_token');
     return {
       success: true,
-      message: 'Logged out successfully'
+      message: 'Logged out successfully',
     };
   }
 
@@ -71,15 +87,17 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
-  async refresh(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response) {
+  async refresh(
+    @CurrentUser() user: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const tokens = await this.authService.refreshTokens(user.userId);
     this.setCookies(res, tokens.access_token, tokens.refresh_token);
     return {
       success: true,
-      message: 'Tokens refreshed'
+      message: 'Tokens refreshed',
     };
   }
-
 
   @ApiBearerAuth()
   @Get('me')
@@ -87,7 +105,7 @@ export class AuthController {
   async getProfile(@CurrentUser() user: any) {
     return {
       success: true,
-      data: user
+      data: user,
     };
   }
 }

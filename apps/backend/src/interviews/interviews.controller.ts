@@ -1,5 +1,21 @@
-import { Controller, Post, Get, Body, Param, Query, UseGuards, Request, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+  ParseUUIDPipe,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { InterviewsService } from './interviews.service';
 import { CreateInterviewDto } from './dto/create-interview.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,11 +33,11 @@ export class InterviewsController {
   @ApiOperation({ summary: 'Create new interview with questions' })
   async createInterview(
     @CurrentUser() user: any,
-    @Body() createDto: CreateInterviewDto
+    @Body() createDto: CreateInterviewDto,
   ) {
     const interview = await this.interviewsService.createInterview(
       user.id,
-      createDto
+      createDto,
     );
     return { success: true, data: interview };
   }
@@ -30,11 +46,11 @@ export class InterviewsController {
   @ApiOperation({ summary: 'Start interview and get LiveKit credentials' })
   async startInterview(
     @CurrentUser() user: any,
-    @Param('id') interviewId: string
+    @Param('id') interviewId: string,
   ) {
     const credentials = await this.interviewsService.startInterview(
       user.id,
-      interviewId
+      interviewId,
     );
     return { success: true, data: credentials };
   }
@@ -48,13 +64,13 @@ export class InterviewsController {
     @CurrentUser() user: any,
     @Query('status') status?: string,
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10
+    @Query('limit') limit: number = 10,
   ) {
     const result = await this.interviewsService.getUserInterviews(
       user.id,
       status,
       Number(page),
-      Number(limit)
+      Number(limit),
     );
     return { success: true, ...result };
   }
@@ -63,11 +79,11 @@ export class InterviewsController {
   @ApiOperation({ summary: 'Get interview details with Q&A' })
   async getInterview(
     @CurrentUser() user: any,
-    @Param('id') interviewId: string
+    @Param('id') interviewId: string,
   ) {
     const interview = await this.interviewsService.getInterviewById(
       user.id,
-      interviewId
+      interviewId,
     );
     return { success: true, data: interview };
   }
@@ -76,11 +92,11 @@ export class InterviewsController {
   @ApiOperation({ summary: 'Complete interview and calculate final scores' })
   async completeInterview(
     @CurrentUser() user: any,
-    @Param('id') interviewId: string
+    @Param('id') interviewId: string,
   ) {
     const interview = await this.interviewsService.completeInterview(
       user.id,
-      interviewId
+      interviewId,
     );
     return { success: true, data: interview };
   }
@@ -92,14 +108,14 @@ export class InterviewsController {
   @ApiQuery({ name: 'room_name', required: true })
   async getInterviewForAgent(
     @Param('id', ParseUUIDPipe) interviewId: string,
-    @Query('room_name') roomName: string
+    @Query('room_name') roomName: string,
   ) {
     if (!roomName) {
       throw new BadRequestException('room_name is required');
     }
     const interview = await this.interviewsService.getInterviewForAgent(
       interviewId,
-      roomName
+      roomName,
     );
     return { success: true, data: interview };
   }

@@ -51,13 +51,14 @@ async function seed() {
       // The requirement says: password: hashed "Password123!"
       // Since we don't have bcrypt installed/setup in this script context easily without adding deps,
       // and the prompt says "hashed 'Password123!'", I will simulate a hash or use a placeholder if bcrypt isn't available.
-      // However, usually we should use the actual hashing mechanism. 
+      // However, usually we should use the actual hashing mechanism.
       // For this "schema design" phase, a placeholder hash string is acceptable as per instructions "No business logic yet".
       // But to be somewhat realistic I'll just use a dummy hash string.
-      
+
       const user = new User();
       user.email = email;
-      user.password_hash = '$2b$10$EpOssIKKr.q3z0jdQqxOT.y5/d.5c6.5.6.5.6.5.6.5.6.5.6'; // Example bcrypt hash
+      user.password_hash =
+        '$2b$10$EpOssIKKr.q3z0jdQqxOT.y5/d.5c6.5.6.5.6.5.6.5.6.5.6'; // Example bcrypt hash
       user.email_verified = true;
       user.created_at = new Date();
       user.updated_at = new Date();

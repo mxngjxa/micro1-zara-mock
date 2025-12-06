@@ -9,14 +9,14 @@ import { AuthService, JwtPayload } from '../auth.service';
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private configService: ConfigService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     const secret = configService.get<string>('JWT_SECRET');
-    
+
     if (!secret || secret.trim() === '') {
       throw new Error(
         'JWT_SECRET is not defined in environment variables. ' +
-        'Please set JWT_SECRET in your .env file before starting the application.'
+          'Please set JWT_SECRET in your .env file before starting the application.',
       );
     }
 
@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: secret
+      secretOrKey: secret,
     });
   }
 

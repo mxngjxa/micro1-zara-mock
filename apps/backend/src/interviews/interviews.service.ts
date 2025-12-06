@@ -1,4 +1,10 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Interview } from '../database/entities/interview.entity';
@@ -39,7 +45,10 @@ export class InterviewsService {
         completed_questions: 0,
       });
 
-      const savedInterview = await queryRunner.manager.save(Interview, interview);
+      const savedInterview = await queryRunner.manager.save(
+        Interview,
+        interview,
+      );
 
       // Generate questions using Gemini
       const generatedQuestions = await this.geminiService.generateQuestions(
@@ -71,7 +80,6 @@ export class InterviewsService {
         ...savedInterview,
         questions: questionsToSave.map(({ expected_answer, ...q }) => q),
       };
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('Failed to create interview', error);
@@ -90,10 +98,9 @@ export class InterviewsService {
       throw new NotFoundException('Interview not found');
     }
 
-    
     // Check if completed
     if (interview.status === 'COMPLETED') {
-        throw new BadRequestException('Interview already completed');
+      throw new BadRequestException('Interview already completed');
     }
 
     const roomName = `interview-${interviewId}`;
@@ -103,19 +110,19 @@ export class InterviewsService {
     // The LiveKitService.createRoom method handles room creation.
     // For simplicity, we just generate the token which will create room on join if configured,
     // or we explicitly create it.
-    
+
     // We'll generate a token. The Python agent will join this room.
     const token = await this.livekitService.generateToken({
-        roomName,
-        participantName,
-        participantId: userId
+      roomName,
+      participantName,
+      participantId: userId,
     });
 
     // Update interview status if it was pending
     if (interview.status === 'PENDING') {
-        interview.status = 'IN_PROGRESS';
-        interview.started_at = new Date();
-        await this.interviewRepository.save(interview);
+      interview.status = 'IN_PROGRESS';
+      interview.started_at = new Date();
+      await this.interviewRepository.save(interview);
     }
 
     return {
@@ -129,7 +136,7 @@ export class InterviewsService {
     // Validate room name format to ensure it matches interview
     const expectedRoomName = `interview-${interviewId}`;
     if (roomName !== expectedRoomName) {
-        throw new ForbiddenException('Invalid room name for this interview');
+      throw new ForbiddenException('Invalid room name for this interview');
     }
 
     const interview = await this.interviewRepository.findOne({
@@ -150,13 +157,13 @@ export class InterviewsService {
       interview_id: interview.id,
       job_role: interview.job_role,
       difficulty: interview.difficulty,
-      questions: interview.questions.map(q => ({
+      questions: interview.questions.map((q) => ({
         id: q.id,
         content: q.content,
         difficulty: q.difficulty,
         topic: q.topic,
         order: q.order,
-        expected_answer: q.expected_answer // Agent needs this
+        expected_answer: q.expected_answer, // Agent needs this
       })),
       completed_questions: interview.completed_questions,
       status: interview.status,
@@ -178,38 +185,42 @@ export class InterviewsService {
     let answerCount = 0;
     const scores: number[] = [];
 
-    interview.questions.forEach(q => {
-        if (q.answer) {
-            if (q.answer.score !== null) {
-                totalScore += q.answer.score;
-                answerCount++;
-                scores.push(q.answer.score);
-            }
+    interview.questions.forEach((q) => {
+      if (q.answer) {
+        if (q.answer.score !== null) {
+          totalScore += q.answer.score;
+          answerCount++;
+          scores.push(q.answer.score);
         }
+      }
     });
 
-    const overallScore = answerCount > 0 ? Math.round(totalScore / answerCount) : 0;
+    const overallScore =
+      answerCount > 0 ? Math.round(totalScore / answerCount) : 0;
 
     // Calculate duration
     let durationMinutes = 0;
     if (interview.started_at) {
-        const endTime = new Date();
-        durationMinutes = Math.round((endTime.getTime() - interview.started_at.getTime()) / 60000);
+      const endTime = new Date();
+      durationMinutes = Math.round(
+        (endTime.getTime() - interview.started_at.getTime()) / 60000,
+      );
     }
 
     // Analyze performance trend
     let performanceTrend = 'CONSISTENT';
     if (scores.length >= 2) {
-        // Compare first half vs second half average
-        const mid = Math.floor(scores.length / 2);
-        const firstHalf = scores.slice(0, mid);
-        const secondHalf = scores.slice(mid);
-        
-        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+      // Compare first half vs second half average
+      const mid = Math.floor(scores.length / 2);
+      const firstHalf = scores.slice(0, mid);
+      const secondHalf = scores.slice(mid);
 
-        if (secondAvg > firstAvg + 10) performanceTrend = 'IMPROVING';
-        else if (secondAvg < firstAvg - 10) performanceTrend = 'DECLINING';
+      const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+      const secondAvg =
+        secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+      if (secondAvg > firstAvg + 10) performanceTrend = 'IMPROVING';
+      else if (secondAvg < firstAvg - 10) performanceTrend = 'DECLINING';
     }
 
     interview.status = 'COMPLETED';
@@ -223,8 +234,14 @@ export class InterviewsService {
     return interview;
   }
 
-  async getUserInterviews(userId: string, status?: string, page: number = 1, limit: number = 10) {
-    const query = this.interviewRepository.createQueryBuilder('interview')
+  async getUserInterviews(
+    userId: string,
+    status?: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const query = this.interviewRepository
+      .createQueryBuilder('interview')
       .where('interview.user_id = :userId', { userId })
       .orderBy('interview.created_at', 'DESC')
       .skip((page - 1) * limit)

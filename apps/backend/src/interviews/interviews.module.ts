@@ -12,10 +12,10 @@ import { LiveKitModule } from '../livekit/livekit.module';
     TypeOrmModule.forFeature([Interview]),
     QuestionsModule,
     GeminiModule,
-    LiveKitModule
+    LiveKitModule,
   ],
   controllers: [InterviewsController],
   providers: [InterviewsService],
-  exports: [InterviewsService]
+  exports: [InterviewsService],
 })
 export class InterviewsModule {}

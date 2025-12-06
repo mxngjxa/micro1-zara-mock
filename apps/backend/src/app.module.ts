@@ -18,10 +18,12 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 minute
-      limit: 10 // 10 requests per minute
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 10, // 10 requests per minute
+      },
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -37,9 +39,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
         LOG_LEVEL: Joi.string()
           .valid('error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly')
           .default('info'),
-        FRONTEND_ORIGIN: Joi.string()
-          .uri()
-          .default('http://localhost:3001'),
+        FRONTEND_ORIGIN: Joi.string().uri().default('http://localhost:3001'),
         JWT_SECRET: Joi.string().min(32).required(),
         JWT_EXPIRATION: Joi.string().default('24h'),
         JWT_REFRESH_SECRET: Joi.string().min(32).required(),
@@ -81,12 +81,12 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     LoggerService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard
+      useClass: ThrottlerGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard
-    }
+      useClass: JwtAuthGuard,
+    },
   ],
   exports: [LoggerService],
 })

@@ -33,10 +33,10 @@ export class QuestionsService {
     });
 
     const answeredQuestionIds = new Set(answers.map((a) => a.question_id));
-    
+
     // Filter to get unanswered questions
     const unansweredQuestions = questions.filter(
-      (q) => !answeredQuestionIds.has(q.id)
+      (q) => !answeredQuestionIds.has(q.id),
     );
 
     if (unansweredQuestions.length === 0) {
@@ -67,7 +67,7 @@ export class QuestionsService {
 
     // Find next unanswered question matching preferred difficulty
     const nextQuestion = unansweredQuestions.find(
-      (q) => q.difficulty === preferredDifficulty
+      (q) => q.difficulty === preferredDifficulty,
     );
 
     // If no match found, return the next available question regardless of difficulty
@@ -95,7 +95,7 @@ export class QuestionsService {
       difficulty: 'EASY' | 'MEDIUM' | 'HARD';
       topic: string;
       order: number;
-    }>
+    }>,
   ): Promise<Question[]> {
     const questions = questionsData.map((data) => {
       const question = this.questionRepository.create({

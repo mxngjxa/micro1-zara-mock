@@ -11,10 +11,10 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
   imports: [
     UsersModule,
     PassportModule,
-    JwtModule.register({}) // Configuration done in strategies
+    JwtModule.register({}), // Configuration done in strategies
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
-  exports: [AuthService]
+  exports: [AuthService],
 })
 export class AuthModule {}

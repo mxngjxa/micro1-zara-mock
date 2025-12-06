@@ -14,7 +14,7 @@ export class LiveKitService {
   private apiKey: string;
   private apiSecret: string;
   private livekitUrl: string;
-  private readonly logger = new Logger(LiveKitService.name)
+  private readonly logger = new Logger(LiveKitService.name);
 
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get<string>('LIVEKIT_API_KEY') || '';
@@ -22,13 +22,15 @@ export class LiveKitService {
     this.livekitUrl = this.configService.get<string>('LIVEKIT_URL') || '';
 
     if (!this.apiKey || !this.apiSecret || !this.livekitUrl) {
-      throw new Error('LiveKit configuration is incomplete. Please set LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL');
+      throw new Error(
+        'LiveKit configuration is incomplete. Please set LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL',
+      );
     }
 
     this.roomService = new RoomServiceClient(
       this.livekitUrl,
       this.apiKey,
-      this.apiSecret
+      this.apiSecret,
     );
   }
 
@@ -36,25 +38,28 @@ export class LiveKitService {
     const token = new AccessToken(this.apiKey, this.apiSecret, {
       identity: options.participantId,
       name: options.participantName,
-      ttl: '1h' // Token valid for 1 hour
+      ttl: '1h', // Token valid for 1 hour
     });
 
     token.addGrant({
       roomJoin: true,
       room: options.roomName,
       canPublish: true,
-      canSubscribe: true
+      canSubscribe: true,
     });
 
     return token.toJwt();
   }
 
-  async createRoom(roomName: string, emptyTimeout: number = 300): Promise<Room> {
+  async createRoom(
+    roomName: string,
+    emptyTimeout: number = 300,
+  ): Promise<Room> {
     try {
       const room = await this.roomService.createRoom({
         name: roomName,
         emptyTimeout: emptyTimeout, // 5 minutes
-        maxParticipants: 2 // User + Agent
+        maxParticipants: 2, // User + Agent
       });
 
       return room;
@@ -69,7 +74,10 @@ export class LiveKitService {
       this.logger.log(`Room deleted: ${roomName}`);
     } catch (error: any) {
       // Room might not exist, log but don't throw
-      this.logger.error(`Failed to delete room ${roomName}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to delete room ${roomName}: ${error.message}`,
+        error.stack,
+      );
     }
   }
 

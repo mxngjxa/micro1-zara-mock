@@ -1274,16 +1274,11 @@ COMPONENT InterviewSetupPage:
 - Badge to show selected topics
 
 ***
-
-### **TASK 6: Create Interview Session Page**
+## **TASK 6: Create Interview Session Page with Voice Orb**
 
 Create **`app/interviews/[id]/session/page.tsx`**:
 
-example code is provided here, please implement according to existing code
-
-
-
-**Purpose**: Voice interview session with LiveKit integration.
+**Purpose**: Voice interview session with LiveKit integration and simple audio-reactive orb visualization.
 
 **Pseudocode**:
 
@@ -1295,7 +1290,8 @@ COMPONENT InterviewSessionPage:
     - livekitConnected: boolean
     - currentQuestionIndex: number
     - agentState: 'initializing' | 'listening' | 'thinking' | 'speaking'
-    - transcript: string (live transcript from agent)
+    - agentAudioLevel: number (0-1, only when agent is speaking)
+    - currentQuestion: string
   
   LIFECYCLE:
     ON MOUNT:
@@ -1317,7 +1313,7 @@ COMPONENT InterviewSessionPage:
     
     - Use useVoiceAssistant hook to get:
       * Agent state
-      * Audio level
+      * Agent audio level (only when speaking)
       * Transcript events
     
     - Listen for agent messages (questions)
@@ -1326,22 +1322,46 @@ COMPONENT InterviewSessionPage:
   UI LAYOUT:
     TOP SECTION:
       - Progress bar (completed / total questions)
-      - Current question number
+      - Current question number: "Question X of Y"
       - Timer showing elapsed time
     
-    MIDDLE SECTION (MAIN):
-      - Large card showing current question text
-      - Agent state indicator:
-        * 🎙️ Listening... (blue pulsing)
-        * 🤔 Thinking... (yellow)
-        * 💬 Speaking... (green)
-      - BarVisualizer for audio levels
-      - Live transcript display (what you're saying)
+    CENTER SECTION (MAIN FOCUS):
+      - Voice Orb (static position, center of screen):
+        * Simple circular gradient sphere
+        * Single blue color: #3B82F6
+        * Animates ONLY when agent is speaking:
+          - Scale pulses based on agent's audio level
+          - Smooth breathing animation (scale 1.0 to 1.3)
+          - Soft glow effect that intensifies with audio
+        * Completely static when:
+          - Agent is listening (no animation)
+          - Agent is thinking (no animation)
+          - User is speaking (no animation)
+      
+      - Current question text (below orb):
+        * Clean card with question content
+        * Large, readable typography
+        * Fades in when question asked
     
     BOTTOM SECTION:
-      - Interview stats: Topic, Difficulty, Job Role
-      - Emergency "End Interview" button
+      - Interview metadata:
+        * Job Role, Difficulty level, Topic badges
+        * Questions completed count
+      - "End Interview" button (minimal, bottom corner)
+  
+  ORB ANIMATION LOGIC:
+    - Simple CSS-based animation using Framer Motion
+    - Animation triggers:
+      * IF agentState === 'speaking' AND agentAudioLevel > 0:
+        - Scale from 1.0 to (1.0 + agentAudioLevel * 0.3)
+        - Glow opacity from 0.3 to (0.3 + agentAudioLevel * 0.5)
+      * ELSE:
+        - Static at scale 1.0
+        - No glow or minimal base glow (0.2 opacity)
     
+    - Smooth transitions (0.1s ease-out)
+    - No rotation, no drift, no physics
+  
   COMPLETION FLOW:
     - When last question answered:
       * Call interviewStore.completeInterview(interviewId)
@@ -1349,18 +1369,93 @@ COMPONENT InterviewSessionPage:
       * Navigate to /interviews/:id/report
 ```
 
-**LiveKit components to use**:
-- LiveKitRoom
-- useVoiceAssistant hook
-- BarVisualizer
-- RoomAudioRenderer
+**Implementation Components**:
 
-**shadcn/ui components**:
+**Required libraries**:
+```bash
+# Lightweight animation (already installed if using shadcn)
+npm install framer-motion
+```
+
+**Component breakdown**:
+
+1. **`VoiceOrb.tsx`** - Minimal orb component:
+   ```typescript
+   COMPONENT VoiceOrb:
+     PROPS:
+       - isAgentSpeaking: boolean
+       - audioLevel: number (0-1)
+     
+     RENDER:
+       - Single div with:
+         * Circular shape (border-radius: 50%)
+         * Blue gradient background (#3B82F6)
+         * Box shadow for glow effect
+         * Framer Motion for scale animation
+       
+       ANIMATION:
+         - IF isAgentSpeaking:
+           * animate={{ scale: 1.0 + audioLevel * 0.3 }}
+           * animate={{ opacity: 0.3 + audioLevel * 0.5 }} (for glow)
+         - ELSE:
+           * animate={{ scale: 1.0 }}
+           * opacity: 0.2 (minimal base glow)
+   ```
+
+2. **`QuestionDisplay.tsx`** - Question card:
+   ```typescript
+   COMPONENT QuestionDisplay:
+     PROPS:
+       - question: string
+       - questionNumber: number
+       - totalQuestions: number
+     
+     RENDER:
+       - Card component (shadcn/ui)
+       - Simple fade in animation
+       - Centered text below orb
+   ```
+
+**LiveKit integration specifics**:
+- **useVoiceAssistant** hook for agent state
+- Track agent audio output level (not user input)
+- Only animate orb when `agentState === 'speaking'`
+- Audio level updates at ~30fps (throttled)
+
+**shadcn/ui components to use**:
 - Card for question display
-- Progress for interview progress
-- Badge for agent state
-- Button for emergency exit
-- Alert for connection issues
+- Progress for interview progress bar
+- Badge for metadata (job role, difficulty)
+- Button for "End Interview"
+
+**Styling**:
+```css
+/* Simple orb styling */
+.voice-orb {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #60A5FA, #3B82F6);
+  box-shadow: 0 0 60px rgba(59, 130, 246, 0.3);
+  /* Animation handled by Framer Motion */
+}
+```
+
+**Visual behavior**:
+- **Idle/Listening**: Static blue circle, minimal glow
+- **Agent Speaking**: Pulses smoothly with audio intensity
+- **No user interaction**: Not draggable, not hoverable
+- **Single color**: Blue (#3B82F6) only, no color changes
+
+**Performance**:
+- CSS-based rendering (no WebGL/Three.js needed)
+- Throttle audio updates to 30fps
+- Simple transform animations (GPU-accelerated)
+
+**Mobile responsiveness**:
+- Orb scales down on smaller screens (150px on mobile)
+- Maintains center position
+- Touch events disabled (no interaction)
 
 ***
 
