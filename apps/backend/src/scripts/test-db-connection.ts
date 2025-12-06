@@ -28,4 +28,6 @@ async function testConnection() {
   }
 }
 
-testConnection();
+(async () =>{
+  await testConnection();
+})();
