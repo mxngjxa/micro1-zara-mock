@@ -1,208 +1,469 @@
-# Voice-Based AI Interview Agent
+Based on the comprehensive repository state, here's a complete project-wide README with proper environment placeholders:
 
-![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react&logoColor=white)
+```markdown
+# 🎙️ Voice-Based AI Interview Agent
+
+![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16.0.7-000000?logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-11.0-E0234E?logo=nestjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
 ![LiveKit](https://img.shields.io/badge/LiveKit-WebRTC-00A1E0?logo=livekit&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?logo=nestjs&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-LTS-339933?logo=node.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178C6?logo=typescript&logoColor=white)
-![TypeORM](https://img.shields.io/badge/TypeORM-0.3.28-FE0803?logo=typeorm&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?logo=postgresql&logoColor=white)
-![Google Gemini](https://img.shields.io/badge/Google_Gemini-API-4285F4?logo=google&logoColor=white)
-![LiveKit Agent](https://img.shields.io/badge/LiveKit_Agent-Python-00A1E0?logo=python&logoColor=white)
-![Gemini Live API](https://img.shields.io/badge/Gemini_Live-Voice-4285F4?logo=google&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=jsonwebtokens&logoColor=white)
-![Passport](https://img.shields.io/badge/Passport-0.7.0-34E27A?logo=passport&logoColor=white)
-![bcrypt](https://img.shields.io/badge/bcrypt-6.0.0-338C5F?logo=letsencrypt&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Gemini-Live_API-4285F4?logo=google&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?logo=swagger&logoColor=black)
-![Jest](https://img.shields.io/badge/Jest-Testing-C21325?logo=jest&logoColor=white)
-![ESLint](https://img.shields.io/badge/ESLint-9.18.0-4B32C3?logo=eslint&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-A full-stack AI application that conducts technical interviews through a natural, voice-first conversational interface. This agent interviews candidates in real-time, generates dynamic technical questions, and evaluates responses using AI.
+A production-grade, voice-first AI interview platform that conducts technical interviews through natural conversation using **LiveKit's Agent Platform** and **Google Gemini Live API**. This system provides real-time speech interaction, AI-driven question generation, adaptive difficulty adjustment, and comprehensive interview evaluation.
 
-![GitHub top language](https://img.shields.io/github/languages/top/mxngjxa/micro1-zara-mock)
-![GitHub package.json version](https://img.shields.io/github/package-json/v/mxngjxa/micro1-zara-mock)
-![GitHub License](https://img.shields.io/github/license/mxngjxa/micro1-zara-mock)
-![GitHub Repo stars](https://img.shields.io/github/stars/mxngjxa/micro1-zara-mock?style=social)
-![GitHub forks](https://img.shields.io/github/forks/mxngjxa/micro1-zara-mock?style=social)
-![GitHub issues](https://img.shields.io/github/issues/mxngjxa/micro1-zara-mock)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/mxngjxa/micro1-zara-mock)
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mxngjxa/micro1-zara-mock?utm_source=oss&utm_medium=github&utm_campaign=mxngjxa%2Fmicro1-zara-mock&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+---
 
-## 🚀 Features
+## ✨ Features
 
-- **Voice-First Interface:** Real-time Speech-to-Text (STT) and Text-to-Speech (TTS) for a natural conversational flow
-- **AI Interview Engine:** Generates context-aware technical questions and evaluates answers on the fly
-- **Silence Detection:** Automatically triggers the next phase of conversation when the user finishes speaking
-- **Live Transcript:** Displays active questions and conversation history in real-time
-- **Secure Architecture:** JWT-based authentication with role-based access control
-- **Monorepo Structure:** Unified codebase managing both React frontend and NestJS backend
+- **🎤 Voice-First Interface**: Real-time bidirectional voice communication via LiveKit WebRTC
+- **🤖 AI Interview Agent**: Python-based LiveKit agent powered by Gemini Live API
+- **🧠 Adaptive Difficulty**: Dynamic question difficulty based on candidate performance
+- **🔍 Comprehensive Evaluation**: Multi-dimensional scoring (correctness, completeness, clarity)
+- **📊 Detailed Reports**: Visual analytics with personalized recommendations
+- **🔐 Secure Authentication**: JWT-based auth with bcrypt password hashing
+- **🏗️ Monorepo Architecture**: Unified workspace managing frontend, backend, and agent
 
-## 🛠 Tech Stack
+---
 
-- **Frontend:** Next.js 16, React 19, Tailwind CSS v4, Lucide React
-- **Backend:** NestJS 11, TypeORM 0.3
-- **Database:** PostgreSQL
-- **Authentication:** JWT (JSON Web Tokens)
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework**: Next.js 16, React 19
+- **Styling**: Tailwind CSS v4
+- **Voice UI**: LiveKit Components React
+- **State**: Zustand
+- **Validation**: Zod, React Hook Form
+
+### Backend
+- **Framework**: NestJS 11 (TypeScript)
+- **Database**: PostgreSQL 15 + TypeORM
+- **Authentication**: JWT (Passport.js) + bcrypt
+- **API Docs**: Swagger/OpenAPI
+- **Logging**: Winston
+
+### Voice AI Agent
+- **Runtime**: Python 3.13
+- **Platform**: LiveKit Agent Platform
+- **AI Model**: Google Gemini Live API
+- **Audio**: Silero VAD (Voice Activity Detection)
+- **Package Manager**: `uv`
+
+---
 
 ## 📂 Project Structure
 
-This project uses NPM Workspaces to manage the full-stack implementation.
+```
+micro1-zara-mock/
+├── backend/              # NestJS REST API
+│   ├── src/
+│   │   ├── auth/        # Authentication module
+│   │   ├── interviews/  # Interview management
+│   │   ├── questions/   # Question service
+│   │   ├── answers/     # Answer evaluation
+│   │   ├── livekit/     # LiveKit token service
+│   │   ├── gemini/      # Gemini API integration
+│   │   └── database/    # Entities & migrations
+│   └── .env             # Backend configuration
+├── frontend/            # Next.js application
+│   ├── src/
+│   │   ├── app/        # Next.js 13+ app router
+│   │   ├── components/ # React components
+│   │   ├── lib/        # API clients & utilities
+│   │   └── store/      # Zustand state management
+│   └── .env.local      # Frontend configuration
+├── agent/               # Python LiveKit agent
+│   ├── src/
+│   │   ├── agent.py           # Main agent entry
+│   │   ├── interview_orchestrator.py
+│   │   ├── api_client.py      # Backend API integration
+│   │   └── config.py          # Config management
+│   ├── pyproject.toml   # Python dependencies (uv)
+│   └── .env             # Agent configuration
+├── packages/shared/     # Shared TypeScript types
+├── docker-compose.yml   # PostgreSQL + Adminer
+├── package.json         # Root workspace config
+└── .env                 # Root environment variables
+```
 
-```
-├── apps/
-│   ├── frontend/         # Next.js application
-│   └── backend/          # NestJS API server
-├── packages/
-│   └── shared/           # Shared TypeScript types and DTOs
-└── package.json          # Root configuration with workspace scripts
-```
+---
 
 ## ⚙️ Prerequisites
 
-- Node.js v18+
-- PostgreSQL (Local or Docker)
-- API Keys for AI Services (OpenAI, Deepgram, etc.)
+- **Node.js** v18+ (LTS recommended)
+- **Python** 3.13
+- **PostgreSQL** 15+ (Docker or local)
+- **uv** (Python package manager)
+- **LiveKit Cloud Account** (free tier available)
+- **Google Gemini API Key**
 
-## ⚡ Quick Start
+---
 
-### 1. Install Dependencies
+## 🚀 Quick Start
 
-From the root directory, install all workspace dependencies:
+### 1️⃣ Clone & Install Dependencies
 
-```bash
+```
+# Clone repository
+git clone https://github.com/mxngjxa/micro1-zara-mock.git
+cd micro1-zara-mock
+
+# Install Node.js dependencies (root, backend, frontend)
 npm install
+
+# Install Python dependencies for agent
+cd agent
+uv sync
+cd ..
 ```
 
-### 2. Environment Configuration
+### 2️⃣ Environment Configuration
 
-**Backend (`apps/backend/.env`):**
+#### **Root `.env`**
+Create `.env` in project root:
 
-```bash
+```
+# Root environment variables (if needed for scripts)
+NODE_ENV=development
+```
+
+#### **Backend `backend/.env`**
+Create `backend/.env`:
+
+```
+# Node Environment
+NODE_ENV=development
 PORT=3000
-DATABASE_URL="postgresql://user:password@localhost:5432/interview_db"
-JWT_SECRET="your-secure-secret-key"
-OPENAI_API_KEY="your-openai-key"
-DEEPGRAM_API_KEY="your-deepgram-key"
+
+# Database Configuration
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=interview_db
+
+# JWT Configuration
+JWT_SECRET=<your-secret-min-32-chars>
+JWT_EXPIRATION=24h
+JWT_REFRESH_SECRET=<your-refresh-secret-min-32-chars>
+JWT_REFRESH_EXPIRATION=7d
+
+# LiveKit Configuration
+LIVEKIT_URL=wss://<your-project>.livekit.cloud
+LIVEKIT_API_KEY=<your-livekit-api-key>
+LIVEKIT_API_SECRET=<your-livekit-api-secret>
+
+# Google Gemini API
+GOOGLE_API_KEY=<your-google-gemini-api-key>
+GEMINI_MODEL=gemini-2.0-flash-exp
+GEMINI_TEMPERATURE=0.7
+
+# CORS & Frontend
+FRONTEND_ORIGIN=http://localhost:3001
+FRONTEND_URL=http://localhost:3001
+
+# Logging
+LOG_LEVEL=info
 ```
 
-**Frontend (`apps/frontend/.env.local`):**
+> **Note**: Replace all `<placeholders>` with actual values.
 
-```bash
-NEXT_PUBLIC_API_URL="http://localhost:3000"
+#### **Frontend `frontend/.env.local`**
+Create `frontend/.env.local`:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
-### 3. Database Setup
+#### **Agent `agent/.env`**
+Create `agent/.env`:
 
-Start PostgreSQL using Docker:
+```
+# LiveKit Configuration
+LIVEKIT_URL=wss://<your-project>.livekit.cloud
+LIVEKIT_API_KEY=<your-livekit-api-key>
+LIVEKIT_API_SECRET=<your-livekit-api-secret>
 
-```bash
+# Google Gemini API
+GOOGLE_API_KEY=<your-google-gemini-api-key>
+
+# NestJS Backend
+NESTJS_API_URL=http://localhost:3000
+```
+
+### 3️⃣ Database Setup
+
+```
+# Start PostgreSQL and Adminer via Docker Compose
 docker compose up -d
-```
 
-Run database migrations:
+# Verify services are running
+docker compose ps
+# Expected: db (postgres) and adminer containers running
 
-```bash
+# Run database migrations
 npm run migration:run -w backend
+
+# Verify tables created
+npx ts-node backend/src/scripts/check-tables.ts
+
+# (Optional) Seed test data
+npx ts-node backend/src/scripts/seed.ts
 ```
 
-Verify migrations (optional):
+### 4️⃣ Download Silero VAD Models (Agent)
 
-```bash
-npx ts-node apps/backend/src/scripts/check-migrations.ts
+```
+cd agent
+uv run python -m livekit.plugins.silero download-models
+cd ..
 ```
 
-## 🏃‍♂️ Running the Application
+---
 
-### Option 1: Run Services Separately
+## 🏃 Running the Application
 
-**Terminal 1 - Backend (NestJS):**
-```bash
+You need **three terminal windows** to run all services:
+
+### **Terminal 1: Backend (NestJS)**
+
+```
 npm run dev:backend
-# Server runs at http://localhost:3000
 ```
 
-**Terminal 2 - Frontend (Next.js):**
-```bash
+✅ Backend runs at: **http://localhost:3000**  
+📄 Swagger API docs: **http://localhost:3000/api/docs**
+
+### **Terminal 2: Frontend (Next.js)**
+
+```
 npm run dev:frontend
-# Client runs at http://localhost:3001
 ```
 
-### Option 2: Development with Watch Mode
+✅ Frontend runs at: **http://localhost:3001**
 
-Backend supports hot-reload in development:
-```bash
-cd apps/backend
-npm run start:dev
+### **Terminal 3: LiveKit Agent (Python)**
+
+```
+cd agent
+uv run python src/agent.py dev
 ```
 
-Frontend with custom port:
-```bash
-cd apps/frontend
-npm run dev -- --port 3001
+✅ Agent connects to LiveKit Cloud and listens for interview sessions
+
+---
+
+## 🔗 Service Endpoints
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Frontend** | http://localhost:3001 | React UI for interviews |
+| **Backend API** | http://localhost:3000 | NestJS REST API |
+| **Swagger Docs** | http://localhost:3000/api/docs | API documentation |
+| **PostgreSQL** | localhost:5432 | Database server |
+| **Adminer** | http://localhost:8080 | DB admin interface |
+
+**Adminer Login:**
+- Server: `db`
+- Username: `postgres`
+- Password: `postgres`
+- Database: `interview_db`
+
+---
+
+## 🧪 Testing
+
 ```
-
-## 🔧 Additional Commands
-
-### Database Migrations
-
-Generate new migration:
-```bash
-npm run migration:generate -w backend src/database/migrations/MigrationName
-```
-
-Revert last migration:
-```bash
-npm run migration:revert -w backend
-```
-
-### Testing
-
-Run all workspace tests:
-```bash
+# Run all tests
 npm run test
-```
 
-Backend tests:
-```bash
+# Backend unit tests
 npm run test -w backend
+
+# Backend E2E tests
 npm run test:e2e -w backend
+
+# Backend test coverage
 npm run test:cov -w backend
 ```
 
-### Build for Production
+---
 
-Build all workspaces:
-```bash
-npm run build
+## 🏗️ Build for Production
+
 ```
+# Build all workspaces
+npm run build
 
-Start backend in production mode:
-```bash
+# Start backend in production mode
 npm run start:prod -w backend
 ```
 
+---
+
 ## 📖 API Documentation
 
-The backend exposes the following key endpoints:
+### Core Endpoints
 
-| Method | Endpoint | Description |
-|:---|:---|:---|
-| `POST` | `/auth/register` | Register a new user |
-| `POST` | `/auth/login` | Authenticate and receive JWT |
-| `POST` | `/interviews/start` | Initialize a new interview session |
-| `POST` | `/interviews/:id/response` | Submit a candidate's answer |
-| `GET` | `/interviews/:id/transcript` | Retrieve full conversation history |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/auth/register` | Register new user | Public |
+| `POST` | `/auth/login` | Login & get JWT | Public |
+| `POST` | `/interviews` | Create interview | Required |
+| `POST` | `/interviews/:id/start` | Start interview & get LiveKit token | Required |
+| `GET` | `/interviews/:id` | Get interview details | Required |
+| `POST` | `/interviews/:id/complete` | Complete interview | Required |
+| `GET` | `/agent/interviews/:id?roomname=` | Get interview for agent | Public* |
 
-## 🧠 AI Configuration
+> **Note**: Agent endpoints use room name validation instead of JWT
 
-- **LLM:** OpenAI GPT models
-- **Speech-to-Text:** Deepgram API
-- **Text-to-Speech:** ElevenLabs or OpenAI TTS
+Full API documentation available at: **http://localhost:3000/api/docs**
+
+---
+
+## 🛠️ Database Migrations
+
+```
+# Generate new migration
+npm run migration:generate -w backend src/database/migrations/MigrationName
+
+# Run pending migrations
+npm run migration:run -w backend
+
+# Revert last migration
+npm run migration:revert -w backend
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Port Conflicts
+
+```
+# Check if ports are in use
+lsof -i :3000  # Backend
+lsof -i :3001  # Frontend
+lsof -i :5432  # PostgreSQL
+lsof -i :8080  # Adminer
+```
+
+### Database Connection Issues
+
+- Verify Docker PostgreSQL is running: `docker compose ps`
+- Check `DATABASE_*` variables in `backend/.env` match `docker-compose.yml`
+- Default credentials: `postgres/postgres` on `localhost:5432`
+- Test connection: `npx ts-node backend/src/scripts/test-db-connection.ts`
+
+### Migration Errors
+
+```
+# Revert and retry
+npm run migration:revert -w backend
+npm run migration:run -w backend
+```
+
+### Workspace Issues
+
+```
+# Reinstall dependencies
+rm -rf node_modules */node_modules
+npm install
+```
+
+### Frontend Build Errors
+
+```
+# Clear Next.js cache
+rm -rf frontend/.next
+npm run dev:frontend
+```
+
+### Agent Connection Issues
+
+```
+# Verify Silero VAD models downloaded
+cd agent
+uv run python verify_setup.py
+
+# Re-download if needed
+uv run python -m livekit.plugins.silero download-models --force
+```
+
+---
+
+## 🏛️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    REACT FRONTEND (Next.js)                 │
+│  - Authentication UI                                        │
+│  - LiveKit Voice Components (useVoiceAssistant)            │
+│  - Interview Management & Reports                          │
+└─────────────────────────────────────────────────────────────┘
+         │ HTTP/REST                          │ WebRTC
+         ▼                                    ▼
+┌──────────────────────┐         ┌────────────────────────────┐
+│   NESTJS BACKEND     │         │   LIVEKIT CLOUD/SERVER     │
+│  - Auth Service      │         │  - Room Management         │
+│  - Interview Service │◄──RPC───│  - WebRTC Transport        │
+│  - Question Service  │         │  - Agent Dispatcher        │
+│  - Evaluation Service│         └────────────────────────────┘
+│  - LiveKit Token Svc │                     │
+│  - PostgreSQL + ORM  │                     ▼
+└──────────────────────┘         ┌────────────────────────────┐
+                                 │ LIVEKIT AGENT (Python)     │
+                                 │  - Gemini Live API         │
+                                 │  - Interview Orchestrator  │
+                                 │  - Turn Detection (VAD)    │
+                                 │  - NestJS Integration      │
+                                 └────────────────────────────┘
+                                              │
+                                              ▼
+                                 ┌────────────────────────────┐
+                                 │   GOOGLE GEMINI API        │
+                                 │  - Live Voice Conversation │
+                                 │  - Question Generation     │
+                                 │  - Answer Evaluation       │
+                                 └────────────────────────────┘
+```
+
+---
 
 ## 📄 License
 
-MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## 📧 Support
+
+For issues or questions, please open an issue on [GitHub](https://github.com/mxngjxa/micro1-zara-mock/issues).
+
+---
+
+**Built with ❤️ using LiveKit, Gemini Live API, NestJS, and Next.js**
+```
+
+This comprehensive README includes:
+
+- Complete environment setup with placeholder templates for all `.env` files
+- Three-service architecture (Backend, Frontend, Agent) startup instructions
+- Proper database setup with Docker Compose
+- Service endpoint documentation
+- Troubleshooting section covering common issues
+- Architecture diagram showing all components
+- Testing and production build instructions
+- Database migration commands
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/dc9570b1-ea97-48d0-afc5-3e4cfb27ea88/repomix-output.xml)

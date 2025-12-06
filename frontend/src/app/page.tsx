@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Mic, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 /**
  * Render the landing page for the AI Interview application.
@@ -14,18 +15,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
  */
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/30">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-50">
+      <nav className="bg-card/80 backdrop-blur-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                <Mic className="h-5 w-5 text-white" />
+                <Mic className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">AI Interview</h1>
+              <h1 className="text-2xl font-bold text-foreground">AI Interview</h1>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              <ThemeToggle />
               <Button variant="ghost" asChild>
                 <Link href="/login">Sign In</Link>
               </Button>
@@ -41,9 +43,9 @@ export default function HomePage() {
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="max-w-5xl mx-auto text-center space-y-8">
           <div className="space-y-4">
-            <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 tracking-tight">
+            <h2 className="text-5xl sm:text-6xl font-bold text-foreground tracking-tight">
               Practice Interviews <br />
-              <span className="text-primary">with AI</span>
+              <span className="bg-gradient-to-r from-primary to-chart-1 bg-clip-text text-transparent">with AI</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Improve your interview skills with our voice-based AI interviewer.
@@ -107,7 +109,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white/50 backdrop-blur-sm">
+      <footer className="border-t bg-card/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-muted-foreground">
             © 2025 AI Interview Platform. Built with Next.js and LiveKit.

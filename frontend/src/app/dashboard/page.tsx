@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 /**
  * Renders the authenticated user's dashboard UI with header, stats, welcome card, and recent activity.
@@ -37,24 +38,27 @@ function DashboardContent() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center">
-                <UserIcon className="h-5 w-5 text-white" />
+                <UserIcon className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Interview Dashboard</h1>
+                <h1 className="text-2xl font-bold text-foreground">Interview Dashboard</h1>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>
-            <Button onClick={handleLogout} variant="outline" className="gap-2">
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button onClick={handleLogout} variant="outline" className="gap-2">
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -149,8 +153,8 @@ function DashboardContent() {
               </div>
             ) : interviews.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="rounded-full bg-slate-100 p-4 mb-4">
-                  <Clock className="h-8 w-8 text-slate-400" />
+                <div className="rounded-full bg-muted p-4 mb-4">
+                  <Clock className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No interviews yet</h3>
                 <p className="text-muted-foreground mb-4 max-w-sm">
@@ -163,12 +167,12 @@ function DashboardContent() {
             ) : (
               <div className="space-y-4">
                 {interviews.slice(0, 5).map(interview => (
-                  <div key={interview.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div key={interview.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`p-2 rounded-full ${
-                        interview.status === 'COMPLETED' ? 'bg-green-100 text-green-600' :
-                        interview.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-600' :
-                        'bg-gray-100 text-gray-600'
+                        interview.status === 'COMPLETED' ? 'bg-green-500/10 text-green-600 dark:text-green-400' :
+                        interview.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' :
+                        'bg-muted text-muted-foreground'
                       }`}>
                         {interview.status === 'COMPLETED' ? <CheckCircle className="h-5 w-5" /> :
                          interview.status === 'IN_PROGRESS' ? <Play className="h-5 w-5" /> :
