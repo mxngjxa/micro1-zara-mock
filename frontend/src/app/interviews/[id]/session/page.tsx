@@ -38,6 +38,7 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
 
   const [agentState, setAgentState] = useState<AgentState>('disconnected');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [completedQuestions, setCompletedQuestions] = useState(0);
   const [currentQuestionText, setCurrentQuestionText] = useState<string>('Waiting for interviewer...');
   const [currentTranscript, setCurrentTranscript] = useState<string>('');
   const [audioLevel, setAudioLevel] = useState(0);
@@ -66,8 +67,12 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
   }, [id, completeInterview, router]);
 
   const handleQuestionReceived = useCallback((question: Question) => {
+    console.log('Question received:', question);
     setCurrentQuestionText(question.content);
-    setCurrentQuestionIndex((prev) => prev + 1);
+    // Use the order from the data message if available
+    if (question.order) {
+      setCurrentQuestionIndex(question.order);
+    }
     setCurrentTranscript(''); // Clear transcript on new question
   }, []);
 
@@ -78,6 +83,19 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
   const handleAgentStateChange = useCallback((state: AgentState) => {
     setAgentState(state);
   }, []);
+
+  const handleProgressUpdate = useCallback((progress: { current_question: number; total_questions: number; completed: number }) => {
+    console.log('Progress update:', progress);
+    setCurrentQuestionIndex(progress.current_question);
+    setCompletedQuestions(progress.completed);
+  }, []);
+
+  const handleInterviewComplete = useCallback(async (interviewId: string) => {
+    console.log('Interview complete, redirecting to report...');
+    // Wait a moment for the agent to finish speaking
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    router.push(`/interviews/${interviewId}/report`);
+  }, [router]);
 
   // Use a separate component to track audio level since we need to be inside LiveKitRoom context
   // or use a custom hook that wraps useVoiceAssistant if possible.
@@ -125,10 +143,10 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
           <div className="flex items-center space-x-4">
             <div className="hidden md:block w-48">
               <div className="flex justify-between text-xs mb-1">
-                <span>Progress</span>
-                <span>{Math.round((currentQuestionIndex / (currentInterview?.total_questions || 10)) * 100)}%</span>
+                <span>Question {currentQuestionIndex} of {currentInterview?.total_questions || 10}</span>
+                <span>{Math.round((completedQuestions / (currentInterview?.total_questions || 10)) * 100)}%</span>
               </div>
-              <Progress value={(currentQuestionIndex / (currentInterview?.total_questions || 10)) * 100} />
+              <Progress value={(completedQuestions / (currentInterview?.total_questions || 10)) * 100} />
             </div>
             <Button variant="destructive" size="sm" onClick={handleDisconnect}>
               End Interview
@@ -176,6 +194,8 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
             onQuestionReceived={handleQuestionReceived}
             onTranscriptUpdate={handleTranscriptUpdate}
             onAgentStateChange={handleAgentStateChange}
+            onProgressUpdate={handleProgressUpdate}
+            onInterviewComplete={handleInterviewComplete}
           />
           
           <RoomAudioRenderer />

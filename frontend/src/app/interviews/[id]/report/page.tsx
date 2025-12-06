@@ -83,10 +83,27 @@ function ReportContent() {
     return 'bg-red-100';
   };
 
-  // Calculate category averages (mock implementation as categories aren't explicit in questions yet)
-  const technicalScore = overall_score || 0;
-  const communicationScore = Math.round((overall_score || 0) * 0.9); // Mock variation
-  const problemSolvingScore = Math.round((overall_score || 0) * 0.95); // Mock variation
+  // Calculate category averages from actual answer evaluations if available
+  const answeredQuestions = questions?.filter(q => q.answer?.evaluation_json) || [];
+  
+  let technicalScore = 0;
+  let communicationScore = 0;
+  let completenessScore = 0;
+  
+  if (answeredQuestions.length > 0) {
+    const totalCorrectness = answeredQuestions.reduce((sum, q) => sum + (q.answer?.evaluation_json?.correctness || 0), 0);
+    const totalClarity = answeredQuestions.reduce((sum, q) => sum + (q.answer?.evaluation_json?.clarity || 0), 0);
+    const totalCompleteness = answeredQuestions.reduce((sum, q) => sum + (q.answer?.evaluation_json?.completeness || 0), 0);
+    
+    technicalScore = Math.round(totalCorrectness / answeredQuestions.length);
+    communicationScore = Math.round(totalClarity / answeredQuestions.length);
+    completenessScore = Math.round(totalCompleteness / answeredQuestions.length);
+  } else if (overall_score) {
+    // Fallback to mock variation if no individual evaluations
+    technicalScore = overall_score;
+    communicationScore = Math.round(overall_score * 0.9);
+    completenessScore = Math.round(overall_score * 0.95);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
@@ -184,9 +201,9 @@ function ReportContent() {
                   <div>
                     <div className="flex justify-between mb-1 text-sm">
                       <span>Completeness</span>
-                      <span className="font-medium">{problemSolvingScore}%</span>
+                      <span className="font-medium">{completenessScore}%</span>
                     </div>
-                    <Progress value={problemSolvingScore} className="h-2" />
+                    <Progress value={completenessScore} className="h-2" />
                   </div>
                 </div>
 
@@ -239,8 +256,8 @@ function ReportContent() {
                               </div>
                             </div>
                           </div>
-                          <div className={`px-3 py-1 rounded-full text-xs font-bold ${getScoreBg(q.answer?.score || 0)} ${getScoreColor(q.answer?.score || 0)}`}>
-                            {q.answer?.score !== null ? `${q.answer?.score}%` : 'N/A'}
+                          <div className={`px-3 py-1 rounded-full text-xs font-bold ${getScoreBg(q.answer?.score ?? null)} ${getScoreColor(q.answer?.score ?? null)}`}>
+                            {q.answer?.score != null && q.answer?.score !== undefined ? `${q.answer.score}%` : 'N/A'}
                           </div>
                         </div>
                       </AccordionTrigger>

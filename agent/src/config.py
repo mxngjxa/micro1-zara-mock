@@ -15,10 +15,11 @@ class Config:
         self.livekit_api_key: str = self._get_required("LIVEKIT_API_KEY")
         self.livekit_api_secret: str = self._get_required("LIVEKIT_API_SECRET")
         
-        # Gemini configuration
+        # Google API Key (used by all Google plugins)
         self.google_api_key: str = self._get_required("GOOGLE_API_KEY")
-        self.gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-tts")
-        self.gemini_voice: str = os.getenv("GEMINI_VOICE", "Puck")
+        
+        # LLM configuration (Gemini)
+        self.llm_model: str = os.getenv("GEMINI_LLM_MODEL", "gemini-2.5-flash-preview-05-20")
         
         try:
             self.gemini_temperature: float = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
@@ -29,6 +30,14 @@ class Config:
                 f"Using default 0.7"
             )
             self.gemini_temperature = 0.7
+        
+        # TTS configuration (Google Cloud TTS)
+        self.tts_voice: str = os.getenv("GOOGLE_TTS_VOICE", "en-US-Studio-O")
+        self.tts_language: str = os.getenv("GOOGLE_TTS_LANGUAGE", "en-US")
+        
+        # STT configuration (Google Cloud STT)
+        self.stt_model: str = os.getenv("GOOGLE_STT_MODEL", "chirp_2")
+        self.stt_language: str = os.getenv("GOOGLE_STT_LANGUAGE", "en-US")
         
         # NestJS API
         self.nestjs_api_url: str = self._get_required("NESTJS_API_URL")

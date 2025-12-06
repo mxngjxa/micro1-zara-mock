@@ -1,10 +1,23 @@
+"""
+Interview Agent using Google STT and TTS plugins.
+
+This agent conducts structured technical interviews using pre-generated questions
+from the backend. It uses:
+- Google STT for speech-to-text transcription (via chirp_2)
+- Google TTS for text-to-speech output (Studio voice)
+- Silero VAD for voice activity detection
+
+NOTE: We do NOT use LLM for automatic responses. The orchestrator
+controls ALL speech output via session.say() to ensure questions
+are asked exactly as written from the backend.
+"""
+
 import asyncio
 import logging
 from livekit import agents
-from livekit.agents import AgentSession, Agent
-from livekit.agents.voice import room_io
+from livekit.agents import AgentSession, Agent, RoomInputOptions
 from livekit.plugins import google, silero, noise_cancellation
-# Change relative imports to absolute
+
 from src.config import config
 from src.api_client import NestJSClient
 from src.interview_orchestrator import InterviewOrchestrator
@@ -17,24 +30,27 @@ server = agents.AgentServer()
 
 
 class InterviewAgent(Agent):
-    """Custom Agent for conducting interviews"""
+    """Minimal Agent for interview - we control all speech via orchestrator.
+    
+    The agent does NOT auto-respond to user input. All speech is controlled
+    by the orchestrator using session.say() for exact text output.
+    """
     
     def __init__(self, orchestrator: InterviewOrchestrator):
-        super().__init__(
-            instructions=(
-                "You are a professional technical interviewer. "
-                "Ask questions clearly and wait for complete answers. "
-                "Be encouraging and professional. Do not interrupt the candidate. "
-                "Acknowledge answers briefly before moving on."
-            )
-        )
+        # Minimal instructions - agent should NOT auto-respond
+        instructions = """You are an interview assistant.
+DO NOT speak unless explicitly told to via system commands.
+DO NOT respond to user speech automatically.
+Wait for explicit instructions before speaking."""
+
+        super().__init__(instructions=instructions)
         self.orchestrator = orchestrator
         self._tasks = set()
 
 
 @server.rtc_session()
 async def entrypoint(ctx: agents.JobContext):
-    """Main agent entry point - called when agent joins a room"""
+    """Main agent entry point - called when agent joins a room."""
     logger.info(f"Agent joining room {ctx.room.name}")
     
     nestjs_client = NestJSClient(config.nestjs_api_url)
@@ -43,74 +59,94 @@ async def entrypoint(ctx: agents.JobContext):
         await ctx.connect()
         logger.info(f"Connected to room {ctx.room.name}")
         
-        # Create AgentSession with Google Gemini Live API (RealtimeModel)
-        # RealtimeModel handles STT, LLM, and TTS in one integrated model
-        # Uses GOOGLE_API_KEY environment variable for authentication
-        session = AgentSession(
-            llm=google.realtime.RealtimeModel(
-                model="gemini-2.0-flash-exp",
-                voice=config.gemini_voice,
-                temperature=config.gemini_temperature,
-                instructions=(
-                    "You are a professional technical interviewer. "
-                    "Ask questions clearly and wait for complete answers. "
-                    "Be encouraging and professional. Do not interrupt the candidate. "
-                    "Acknowledge answers briefly before moving on."
-                ),
-            ),
-            # VAD for turn detection - increased silence duration for interview context
-            vad=silero.VAD.load(
-                min_speech_duration=0.5,
-                min_silence_duration=2.0,  # Wait 2 seconds of silence before considering turn complete
-                prefix_padding_duration=0.3,  # Renamed from padding_duration
-            ),
-        )
-        
-        # Create Interview Orchestrator
-        orchestrator = InterviewOrchestrator(
+        # Create a temporary orchestrator to fetch interview data first
+        temp_orchestrator = InterviewOrchestrator(
             nestjs_client=nestjs_client,
-            session=session,
+            session=None,  # Will be set later
             room_name=ctx.room.name,
+            room=ctx.room,
         )
         
-        success = await orchestrator.initialize()
+        # Initialize to get interview questions
+        success = await temp_orchestrator.initialize()
         if not success:
             logger.error("Failed to initialize interview orchestrator")
             await asyncio.sleep(2)
             return
         
+        questions = temp_orchestrator.questions
+        interview_data = temp_orchestrator.interview_data
+        
+        logger.info(f"Loaded {len(questions)} questions for interview")
+        
+        # Create AgentSession with STT, TTS, and VAD ONLY
+        # We intentionally DO NOT include LLM to prevent automatic responses
+        # All speech output is controlled via session.say() by the orchestrator
+        session = AgentSession(
+            # STT for transcribing user speech (Google Cloud Speech-to-Text)
+            stt=google.STT(
+                model=config.stt_model,
+                languages=[config.stt_language],
+                spoken_punctuation=True,
+            ),
+            # TTS for speaking responses (Google Cloud Text-to-Speech)
+            tts=google.TTS(
+                voice_name=config.tts_voice,
+                language=config.tts_language,
+            ),
+            # VAD for turn detection - longer silence for interviews
+            vad=silero.VAD.load(
+                min_speech_duration=0.5,
+                min_silence_duration=3.0,  # Wait 3 seconds before considering turn complete
+                prefix_padding_duration=0.5,
+            ),
+        )
+        
+        # Update orchestrator with session
+        orchestrator = InterviewOrchestrator(
+            nestjs_client=nestjs_client,
+            session=session,
+            room_name=ctx.room.name,
+            room=ctx.room,
+        )
+        orchestrator.interview_data = interview_data
+        orchestrator.questions = questions
+        orchestrator.interview_id = temp_orchestrator.interview_id
+        
+        # Create the agent
         agent = InterviewAgent(orchestrator)
         
-        # Event handlers - use decorator on session object
+        # Event handlers
         @session.on("agent_state_changed")
         def on_agent_state_changed(ev):
             logger.debug(f"Agent state changed: {ev}")
         
-        @session.on("user_state_changed") 
+        @session.on("user_state_changed")
         def on_user_state_changed(ev):
             logger.debug(f"User state changed: {ev}")
         
         @session.on("user_input_transcribed")
         def on_user_input_transcribed(ev):
-            # Called when user speech is transcribed
+            """Handle transcribed user speech - pass to orchestrator for debouncing."""
             if hasattr(ev, 'transcript') and ev.transcript:
+                logger.info(f"User said: {ev.transcript[:100]}...")
                 task = asyncio.create_task(
                     orchestrator.on_user_speech_committed(ev.transcript)
                 )
                 agent._tasks.add(task)
                 task.add_done_callback(agent._tasks.discard)
         
-        # Start the session
+        # Start the session - no agent needed since we don't use LLM
+        # We pass agent=None to prevent automatic LLM responses
         await session.start(
             room=ctx.room,
             agent=agent,
-            room_options=room_io.RoomOptions(
-                audio_input=room_io.AudioInputOptions(
-                    noise_cancellation=noise_cancellation.BVC(),
-                ),
+            room_input_options=RoomInputOptions(
+                noise_cancellation=noise_cancellation.BVC(),
             ),
         )
         
+        logger.info("Session started, beginning interview...")
         await asyncio.sleep(1)
         await orchestrator.start_interview(session)
         
@@ -130,6 +166,7 @@ async def entrypoint(ctx: agents.JobContext):
         logger.info("Cleaning up agent resources")
         await nestjs_client.close()
         logger.info("Interview agent session ended")
+
 
 if __name__ == "__main__":
     agents.cli.run_app(server)

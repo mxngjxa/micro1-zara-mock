@@ -6,16 +6,26 @@ import { Question } from '@/types/interview.types';
 
 import { AgentState } from '@livekit/components-react';
 
+interface ProgressUpdate {
+  current_question: number;
+  total_questions: number;
+  completed: number;
+}
+
 interface VoiceAssistantHandlerProps {
   onQuestionReceived: (question: Question) => void;
   onTranscriptUpdate: (transcript: string) => void;
   onAgentStateChange: (state: AgentState) => void;
+  onProgressUpdate?: (progress: ProgressUpdate) => void;
+  onInterviewComplete?: (interviewId: string) => void;
 }
 
 export function VoiceAssistantHandler({
   onQuestionReceived,
   onTranscriptUpdate,
   onAgentStateChange,
+  onProgressUpdate,
+  onInterviewComplete,
 }: VoiceAssistantHandlerProps) {
   const room = useRoomContext();
   const { state, audioTrack } = useVoiceAssistant();
@@ -35,10 +45,21 @@ export function VoiceAssistantHandler({
         const strData = decoder.decode(payload);
         const data = JSON.parse(strData);
 
+        console.log('Received data message:', data.type, data);
+
         if (data.type === 'question') {
           onQuestionReceived(data.question);
         } else if (data.type === 'transcript') {
           onTranscriptUpdate(data.text);
+        } else if (data.type === 'progress' && onProgressUpdate) {
+          onProgressUpdate({
+            current_question: data.current_question,
+            total_questions: data.total_questions,
+            completed: data.completed,
+          });
+        } else if (data.type === 'interview_complete' && onInterviewComplete) {
+          console.log('Interview complete, navigating to report...');
+          onInterviewComplete(data.interview_id);
         }
       } catch (error) {
         console.error('Failed to parse data message:', error);
@@ -50,7 +71,7 @@ export function VoiceAssistantHandler({
     return () => {
       room.off('dataReceived', handleDataReceived);
     };
-  }, [room, onQuestionReceived, onTranscriptUpdate]);
+  }, [room, onQuestionReceived, onTranscriptUpdate, onProgressUpdate, onInterviewComplete]);
 
   return null; // Logic-only component
 }

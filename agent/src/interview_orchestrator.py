@@ -1,4 +1,16 @@
+"""
+Interview Orchestrator - Controls the flow of structured interviews.
+
+This orchestrator:
+- Manages the sequence of pre-generated questions
+- Handles user speech with debouncing (waits for user to finish speaking)
+- Submits answers to the backend for evaluation
+- Sends progress updates to the frontend via data channel
+- Prevents processing speech while agent is speaking
+"""
+
 import asyncio
+import json
 import logging
 import re
 from datetime import datetime
@@ -8,30 +20,46 @@ from src.api_client import NestJSClient
 
 logger = logging.getLogger(__name__)
 
+# Minimum transcript length required by backend validation
+MIN_TRANSCRIPT_LENGTH = 10
+
+# Time to wait after last speech before processing answer (debounce)
+SPEECH_DEBOUNCE_SECONDS = 4.0
+
 
 class InterviewOrchestrator:
-    """Orchestrates the interview flow with questions and answers"""
+    """Orchestrates the interview flow with pre-generated questions."""
     
     def __init__(
         self,
         nestjs_client: NestJSClient,
         session: Any,  # AgentSession
         room_name: str,
+        room: Any = None,  # LiveKit Room for data messages
     ):
         self.nestjs_client = nestjs_client
         self.session = session
         self.room_name = room_name
+        self.room = room
+        
+        # Interview state
         self.interview_data: Optional[dict[str, Any]] = None
         self.current_question_index = 0
         self.questions: list[dict[str, Any]] = []
         self.interview_id: Optional[str] = None
         self.answer_start_time: Optional[datetime] = None
+        
+        # Speech handling state
         self.current_transcript = ""
+        self._accumulated_transcript = ""
         self._background_tasks = set()
         self._processing_speech = False
+        self._waiting_for_answer = False
+        self._debounce_task: Optional[asyncio.Task] = None
+        self._agent_speaking = False  # Track if agent is currently speaking
     
     async def initialize(self) -> bool:
-        """Fetch interview details from NestJS"""
+        """Fetch interview details from NestJS backend."""
         try:
             # Extract interview_id from room_name (format: interview-{uuid})
             match = re.search(r"interview-([0-9a-fA-F-]+)", self.room_name)
@@ -40,10 +68,7 @@ class InterviewOrchestrator:
                 return False
             
             self.interview_id = match.group(1)
-            logger.info(
-                f"Initializing interview {self.interview_id} "
-                f"for room {self.room_name}"
-            )
+            logger.info(f"Initializing interview {self.interview_id} for room {self.room_name}")
             
             self.interview_data = await self.nestjs_client.get_interview_details(
                 self.interview_id, self.room_name
@@ -53,21 +78,19 @@ class InterviewOrchestrator:
                 logger.error("Failed to fetch interview data - got None")
                 return False
             
-            # API returns snake_case field names
             self.questions = self.interview_data.get("questions", [])
             if not self.questions:
-                logger.error(f"No questions found in interview data: {self.interview_data.keys()}")
+                logger.error(f"No questions found in interview data")
                 return False
             
-            # Sort questions by order field if available
+            # Sort questions by order
             self.questions.sort(key=lambda x: x.get("order", 0))
             
-            # Resume from last completed question (API uses snake_case)
+            # Resume from last completed question if any
             completed_count = self.interview_data.get("completed_questions", 0)
             if completed_count > 0 and completed_count < len(self.questions):
                 self.current_question_index = completed_count
             
-            # API returns snake_case: job_role, difficulty
             logger.info(
                 f"Interview initialized: {self.interview_data.get('job_role')} "
                 f"({self.interview_data.get('difficulty')}) "
@@ -79,163 +102,292 @@ class InterviewOrchestrator:
             logger.error(f"Error initializing interview: {e}", exc_info=True)
             return False
     
+    async def send_data_message(self, data: dict):
+        """Send a data message to the frontend via LiveKit data channel."""
+        if not self.room:
+            logger.debug("No room available for data message")
+            return
+        
+        try:
+            message = json.dumps(data).encode('utf-8')
+            await self.room.local_participant.publish_data(message)
+            logger.debug(f"Sent data message: {data.get('type')}")
+        except Exception as e:
+            logger.error(f"Failed to send data message: {e}")
+    
+    async def send_progress_update(self):
+        """Send current progress to frontend."""
+        await self.send_data_message({
+            "type": "progress",
+            "current_question": self.current_question_index + 1,
+            "total_questions": len(self.questions),
+            "completed": self.current_question_index,
+        })
+    
     async def start_interview(self, session: Any):
-        """Begin the interview by asking first question"""
+        """Begin the interview with a greeting and first question."""
         if not self.interview_data:
             logger.error("Cannot start interview: Not initialized")
             return
         
-        # API returns snake_case field names
-        job_role = self.interview_data.get("job_role", "unknown role")
+        job_role = self.interview_data.get("job_role", "the position")
         difficulty = self.interview_data.get("difficulty", "standard")
         question_count = len(self.questions)
         
+        # Greeting - use say() for exact text, not LLM-generated
         greeting = (
-            f"Hello! I'm your AI interviewer today. "
-            f"We'll be conducting a {difficulty} level interview for the {job_role} position. "
-            f"I have {question_count} questions prepared. "
-            f"Please answer each question to the best of your ability. "
-            f"Take your time to think before you answer. "
-            f"Let's begin!"
+            f"Hello! Welcome to your {difficulty} level technical interview "
+            f"for the {job_role} position. "
+            f"I have {question_count} questions prepared for you today. "
+            f"Please take your time to think before answering each question. "
+            f"Let's begin with the first question."
         )
         
-        await session.generate_reply(instructions=greeting)
-        await asyncio.sleep(2.0)  # Give more time before first question
-        await self.ask_next_question(session)
+        logger.info("Starting interview with greeting...")
+        
+        # Mark agent as speaking to ignore any user speech during this time
+        self._agent_speaking = True
+        try:
+            # Use say() to speak the exact greeting text
+            await session.say(greeting, allow_interruptions=False)
+        finally:
+            self._agent_speaking = False
+        
+        # Small pause before first question
+        await asyncio.sleep(1.5)
+        
+        # Ask the first question
+        await self.ask_current_question(session)
     
-    async def ask_next_question(self, session: Any):
-        """Ask the next question in sequence"""
+    async def ask_current_question(self, session: Any):
+        """Ask the current question using exact text."""
         if self.current_question_index >= len(self.questions):
             await self.conclude_interview(session)
             return
         
         question = self.questions[self.current_question_index]
         question_number = self.current_question_index + 1
-        self.answer_start_time = datetime.now()
+        question_content = question.get("content", "")
+        
+        # Reset state for new question - BEFORE speaking
         self.current_transcript = ""
+        self._accumulated_transcript = ""
+        self._processing_speech = False
+        self._waiting_for_answer = False  # Will enable after speaking
         
-        logger.info(f"Asking question {question_number}: {question.get('content')}")
+        logger.info(f"Asking question {question_number}/{len(self.questions)}: {question_content[:50]}...")
         
-        text = f"Question {question_number}: {question.get('content')}"
-        await session.generate_reply(instructions=text)
-    
-    async def handle_user_finished_speaking(self):
-        """Called when user finishes speaking (from user_state_changed event)"""
-        if not self.session:
-            return
+        # Send question data to frontend
+        await self.send_data_message({
+            "type": "question",
+            "question": {
+                "id": question.get("id"),
+                "content": question_content,
+                "order": question_number,
+            }
+        })
         
-        # Get the latest transcript from the session
-        # Note: You may need to track this differently based on your implementation
-        # This is a placeholder - you'll need to capture transcripts through the session
+        # Send progress update
+        await self.send_progress_update()
         
-        duration = 0.0
-        if self.answer_start_time:
-            duration = (datetime.now() - self.answer_start_time).total_seconds()
+        # Mark agent as speaking - ignore user speech during question
+        self._agent_speaking = True
+        try:
+            # Speak the question using say() for exact text
+            question_text = f"Question {question_number}: {question_content}"
+            await session.say(question_text, allow_interruptions=False)
+        finally:
+            self._agent_speaking = False
         
-        if self.current_question_index >= len(self.questions):
-            logger.warning("Received speech after interview completion")
-            return
+        # NOW start waiting for answer (after question is fully spoken)
+        self.answer_start_time = datetime.now()
+        self._waiting_for_answer = True
         
-        question = self.questions[self.current_question_index]
-        question_id = question.get("id")
-        
-        # Note: You'll need to implement transcript capture
-        # This is a simplified version
-        if self.current_transcript and not self._processing_speech:
-            self._processing_speech = True
-            
-            submit_task = asyncio.create_task(
-                self.handle_answer_submission(
-                    question_id, self.current_transcript, duration
-                )
-            )
-            self._background_tasks.add(submit_task)
-            submit_task.add_done_callback(self._background_tasks.discard)
-
-            transition_task = asyncio.create_task(self.transition_to_next_question())
-            self._background_tasks.add(transition_task)
-            transition_task.add_done_callback(lambda t: self._cleanup_task_and_reset_speech_flag(t))
+        logger.info(f"Question {question_number} asked, now waiting for answer...")
     
     async def on_user_speech_committed(self, transcript: str):
-        """Store user transcript"""
-        self.current_transcript = transcript
-        logger.info(f"User speech committed: {len(transcript)} chars")
-        
-        duration = 0.0
-        if self.answer_start_time:
-            duration = (datetime.now() - self.answer_start_time).total_seconds()
-        
-        if self.current_question_index >= len(self.questions):
+        """Handle transcribed user speech with debouncing."""
+        # Ignore speech while agent is speaking (prevents weird comments)
+        if self._agent_speaking:
+            logger.debug("Ignoring speech - agent is speaking")
             return
         
-        question = self.questions[self.current_question_index]
-        question_id = question.get("id")
+        if not self._waiting_for_answer:
+            logger.debug("Ignoring speech - not waiting for answer")
+            return
         
-        # Submit answer and move to next question
-        if not self._processing_speech:
-            self._processing_speech = True
-
-            submit_task = asyncio.create_task(
-                self.handle_answer_submission(question_id, transcript, duration)
-            )
-            self._background_tasks.add(submit_task)
-            submit_task.add_done_callback(self._background_tasks.discard)
+        if self._processing_speech:
+            logger.debug("Ignoring speech - already processing")
+            return
+        
+        # Accumulate transcript
+        if transcript:
+            if self._accumulated_transcript:
+                self._accumulated_transcript += " " + transcript
+            else:
+                self._accumulated_transcript = transcript
+            self._accumulated_transcript = self._accumulated_transcript.strip()
+        
+        self.current_transcript = self._accumulated_transcript
+        logger.info(f"Speech accumulated: {len(self._accumulated_transcript)} chars total")
+        
+        # Send live transcript to frontend
+        await self.send_data_message({
+            "type": "transcript",
+            "text": self._accumulated_transcript
+        })
+        
+        # Cancel existing debounce timer - user is still speaking
+        if self._debounce_task and not self._debounce_task.done():
+            self._debounce_task.cancel()
+            logger.debug("Reset debounce timer - user still speaking")
+        
+        # Start new debounce timer
+        self._debounce_task = asyncio.create_task(self._process_answer_after_silence())
+    
+    async def _process_answer_after_silence(self):
+        """Wait for silence then process the answer."""
+        try:
+            logger.info(f"Waiting {SPEECH_DEBOUNCE_SECONDS}s for user to finish...")
+            await asyncio.sleep(SPEECH_DEBOUNCE_SECONDS)
             
-            transition_task = asyncio.create_task(self.transition_to_next_question())
-            self._background_tasks.add(transition_task)
-            transition_task.add_done_callback(lambda t: self._cleanup_task_and_reset_speech_flag(t))
+            # Validate state
+            if not self._waiting_for_answer or self._processing_speech:
+                logger.debug("State changed during debounce, skipping")
+                return
+            
+            if self.current_question_index >= len(self.questions):
+                logger.warning("All questions already answered")
+                return
+            
+            # Validate transcript length
+            if len(self._accumulated_transcript) < MIN_TRANSCRIPT_LENGTH:
+                logger.warning(
+                    f"Transcript too short ({len(self._accumulated_transcript)} chars), "
+                    f"waiting for more speech..."
+                )
+                return
+            
+            # Calculate answer duration
+            duration = 0.0
+            if self.answer_start_time:
+                duration = (datetime.now() - self.answer_start_time).total_seconds()
+            
+            question = self.questions[self.current_question_index]
+            question_id = question.get("id")
+            
+            logger.info(f"Processing answer for question {self.current_question_index + 1}")
+            
+            # Lock processing
+            self._processing_speech = True
+            self._waiting_for_answer = False
+            
+            # Submit answer to backend for evaluation
+            await self.submit_answer(question_id, self._accumulated_transcript, duration)
+            
+            # Brief acknowledgment - natural transition
+            self._agent_speaking = True
+            try:
+                await self.session.say("Thank you.", allow_interruptions=False)
+            finally:
+                self._agent_speaking = False
+            
+            # Brief pause before next question
+            await asyncio.sleep(0.5)
+            
+            # Move to next question
+            self.current_question_index += 1
+            self._processing_speech = False
+            
+            # Send progress update after completing a question
+            await self.send_progress_update()
+            
+            # Ask next question or conclude
+            await self.ask_current_question(self.session)
+            
+        except asyncio.CancelledError:
+            logger.debug("Answer processing cancelled - user continued speaking")
+        except Exception as e:
+            logger.error(f"Error processing answer: {e}", exc_info=True)
+            self._processing_speech = False
     
-    def _cleanup_task_and_reset_speech_flag(self, task):
-        self._background_tasks.discard(task)
-        self._processing_speech = False
-        if task.exception():
-            logger.error(f"Background task failed: {task.exception()}", exc_info=task.exception())
-
-    async def handle_answer_submission(
-        self, question_id: str, transcript: str, duration: float
-    ):
-        """Submit answer to backend"""
-        logger.info(f"Submitting answer for question {question_id}")
-        await self.nestjs_client.submit_answer(
-            question_id=question_id,
-            transcript=transcript,
-            duration=duration,
-        )
-    
-    async def transition_to_next_question(self):
-        """Handle transition between questions"""
-        acknowledgment = "Thank you. Let me note your answer."
-        await self.session.generate_reply(instructions=acknowledgment)
+    async def submit_answer(self, question_id: str, transcript: str, duration: float):
+        """Submit answer to backend for evaluation."""
+        if len(transcript) < MIN_TRANSCRIPT_LENGTH:
+            logger.warning(f"Skipping submission - transcript too short")
+            return
         
-        self.current_question_index += 1
-        await asyncio.sleep(1.0)
-        await self.ask_next_question(self.session)
+        logger.info(f"Submitting answer: {len(transcript)} chars, {duration:.1f}s")
+        
+        try:
+            result = await self.nestjs_client.submit_answer(
+                question_id=question_id,
+                transcript=transcript,
+                duration=duration,
+            )
+            if result:
+                score = result.get('score', 'N/A')
+                logger.info(f"Answer submitted, score: {score}")
+        except Exception as e:
+            logger.error(f"Failed to submit answer: {e}", exc_info=True)
     
     async def conclude_interview(self, session: Any):
-        """Finish the interview"""
-        logger.info("Concluding interview")
+        """Finish the interview with closing remarks and trigger evaluation."""
+        logger.info("Concluding interview...")
+        
+        # Stop accepting speech
+        self._waiting_for_answer = False
         
         closing = (
-            "Thank you for completing the interview! "
+            f"Thank you for completing the interview! "
             f"That concludes all {len(self.questions)} questions. "
-            "Your responses are being evaluated and you'll receive "
-            "a detailed report shortly. Have a great day!"
+            f"Your responses are being evaluated and you'll receive "
+            f"a detailed report shortly. "
+            f"Thank you for your time and have a great day!"
         )
         
-        await session.generate_reply(instructions=closing)
+        # Mark agent as speaking
+        self._agent_speaking = True
+        try:
+            # Speak closing using say()
+            await session.say(closing, allow_interruptions=False)
+        finally:
+            self._agent_speaking = False
+        
+        # Send final progress update
+        await self.send_data_message({
+            "type": "progress",
+            "current_question": len(self.questions),
+            "total_questions": len(self.questions),
+            "completed": len(self.questions),
+        })
+        
+        # Notify frontend that interview is complete
+        await self.send_data_message({
+            "type": "interview_complete",
+            "interview_id": self.interview_id,
+        })
+        
+        # Wait for speech to complete
         await asyncio.sleep(2.0)
         
+        # Notify backend that interview is complete - this triggers evaluation!
         if self.interview_id:
+            logger.info("Notifying backend to complete interview and run evaluation...")
             await self.nestjs_client.complete_interview(self.interview_id, self.room_name)
+            logger.info("Interview completion notified to backend - evaluation triggered")
     
     async def handle_error(self, error: Exception):
-        """Handle errors gracefully"""
+        """Handle errors gracefully during interview."""
         logger.error(f"Interview error: {error}", exc_info=True)
+        
         message = (
             "I apologize, but we've encountered a technical issue. "
-            "Please try refreshing or contacting support."
+            "Please try refreshing the page or contact support if the problem persists."
         )
+        
         try:
-            await self.session.generate_reply(instructions=message)
+            if self.session:
+                await self.session.say(message, allow_interruptions=True)
         except Exception as e:
-            logger.error(f"Failed to generate error reply: {e}", exc_info=True)
+            logger.error(f"Failed to speak error message: {e}")
