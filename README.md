@@ -57,7 +57,7 @@ A production-grade, voice-first AI interview platform that conducts technical in
 
 ## 📂 Project Structure
 
-```
+```bash
 micro1-zara-mock/
 ├── backend/              # NestJS REST API
 │   ├── src/
@@ -107,7 +107,7 @@ micro1-zara-mock/
 
 ### 1️⃣ Clone & Install Dependencies
 
-```
+```bash
 # Clone repository
 git clone https://github.com/mxngjxa/micro1-zara-mock.git
 cd micro1-zara-mock
@@ -116,9 +116,7 @@ cd micro1-zara-mock
 npm install
 
 # Install Python dependencies for agent
-cd agent
 uv sync
-cd ..
 ```
 
 ### 2️⃣ Environment Configuration
@@ -127,72 +125,70 @@ cd ..
 Create `.env` in project root:
 
 ```
-# Root environment variables (if needed for scripts)
-NODE_ENV=development
+# frontend
+PORT=3001
+
+# database
+DATABASE_URL="postgresql://user:password@localhost:5432/interview_db"
+
+# ai api keys
+DEEPGRAM_API_KEY=your-deepgram-api-key
+GOOGLE_API_KEY=your-gogole-api-key
+
+#livekit api keys
+LIVEKIT_URL=wss://livekiturl
+LIVEKIT_API_KEY=livekit-api-key-here
+LIVEKIT_API_SECRET=livekit-api-secret-here
+
+# nestjs backend
+NESTJS_API_URL=http://localhost:3000
+LOG_LEVEL=INFO
 ```
 
 #### **Backend `backend/.env`**
 Create `backend/.env`:
 
 ```
-# Node Environment
 NODE_ENV=development
 PORT=3000
 
-# Database Configuration
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USER=postgres
 DATABASE_PASSWORD=postgres
 DATABASE_NAME=interview_db
 
+LOG_LEVEL=info
+
 # JWT Configuration
-JWT_SECRET=<your-secret-min-32-chars>
+JWT_SECRET=your-jwt-secret-here
 JWT_EXPIRATION=24h
-JWT_REFRESH_SECRET=<your-refresh-secret-min-32-chars>
+JWT_REFRESH_SECRET=your-jwt-refresh-secret-here
 JWT_REFRESH_EXPIRATION=7d
 
 # LiveKit Configuration
-LIVEKIT_URL=wss://<your-project>.livekit.cloud
-LIVEKIT_API_KEY=<your-livekit-api-key>
-LIVEKIT_API_SECRET=<your-livekit-api-secret>
+LIVEKIT_URL=wss://livekiturl
+LIVEKIT_API_KEY=livekit-api-key-here
+LIVEKIT_API_SECRET=livekit-api-secret-here
+
+# Application
+FRONTEND_URL=http://localhost:3001
+FRONTEND_ORIGIN=http://localhost:3001
 
 # Google Gemini API
-GOOGLE_API_KEY=<your-google-gemini-api-key>
-GEMINI_MODEL=gemini-2.0-flash-exp
+GOOGLE_API_KEY=your-gogole-api-key
+GEMINI_MODEL=gemini-2.5-flash
 GEMINI_TEMPERATURE=0.7
-
-# CORS & Frontend
-FRONTEND_ORIGIN=http://localhost:3001
-FRONTEND_URL=http://localhost:3001
-
-# Logging
-LOG_LEVEL=info
 ```
 
-> **Note**: Replace all `<placeholders>` with actual values.
+> **Note**: Replace all `<XXX_API_KEY=your-XXX-api-key>` with actual values.
 
 #### **Frontend `frontend/.env.local`**
 Create `frontend/.env.local`:
 
-```
+```bash
 NEXT_PUBLIC_API_URL=http://localhost:3000
-```
-
-#### **Agent `agent/.env`**
-Create `agent/.env`:
-
-```
-# LiveKit Configuration
-LIVEKIT_URL=wss://<your-project>.livekit.cloud
-LIVEKIT_API_KEY=<your-livekit-api-key>
-LIVEKIT_API_SECRET=<your-livekit-api-secret>
-
-# Google Gemini API
-GOOGLE_API_KEY=<your-google-gemini-api-key>
-
-# NestJS Backend
-NESTJS_API_URL=http://localhost:3000
+NEXT_PUBLIC_WS_URL=ws://localhost:3000
 ```
 
 ### 3️⃣ Database Setup
@@ -208,19 +204,14 @@ docker compose ps
 # Run database migrations
 npm run migration:run -w backend
 
+# Verify migrations applied successfully
+npx ts-node backend/src/scripts/check-migrations.ts
+
 # Verify tables created
 npx ts-node backend/src/scripts/check-tables.ts
 
 # (Optional) Seed test data
 npx ts-node backend/src/scripts/seed.ts
-```
-
-### 4️⃣ Download Silero VAD Models (Agent)
-
-```
-cd agent
-uv run python -m livekit.plugins.silero download-models
-cd ..
 ```
 
 ---
@@ -231,16 +222,19 @@ You need **three terminal windows** to run all services:
 
 ### **Terminal 1: Backend (NestJS)**
 
-```
+```bash
 npm run dev:backend
 ```
+
+> **Note**: If port 3000 is blocked, run `lsof -i :3000` to see the `PID`, then run `kill -9 PID` to kill process blocking port.
+
 
 ✅ Backend runs at: **http://localhost:3000**  
 📄 Swagger API docs: **http://localhost:3000/api/docs**
 
 ### **Terminal 2: Frontend (Next.js)**
 
-```
+```bash
 npm run dev:frontend
 ```
 
@@ -248,9 +242,8 @@ npm run dev:frontend
 
 ### **Terminal 3: LiveKit Agent (Python)**
 
-```
-cd agent
-uv run python src/agent.py dev
+```bash
+uv run python agent/agent.py dev
 ```
 
 ✅ Agent connects to LiveKit Cloud and listens for interview sessions
@@ -453,17 +446,3 @@ For issues or questions, please open an issue on [GitHub](https://github.com/mxn
 ---
 
 **Built with ❤️ using LiveKit, Gemini Live API, NestJS, and Next.js**
-```
-
-This comprehensive README includes:
-
-- Complete environment setup with placeholder templates for all `.env` files
-- Three-service architecture (Backend, Frontend, Agent) startup instructions
-- Proper database setup with Docker Compose
-- Service endpoint documentation
-- Troubleshooting section covering common issues
-- Architecture diagram showing all components
-- Testing and production build instructions
-- Database migration commands
-
-[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/60588710/dc9570b1-ea97-48d0-afc5-3e4cfb27ea88/repomix-output.xml)

@@ -40,8 +40,14 @@ except ImportError:
     GOOGLE_AVAILABLE = False
 
 
-logging.basicConfig(level=config.log_level)
+# Configure logging only if no handlers exist (avoid duplicate logs)
 logger = logging.getLogger(__name__)
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(
+        level=config.log_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+logger.setLevel(config.log_level)
 
 server = agents.AgentServer()
 
