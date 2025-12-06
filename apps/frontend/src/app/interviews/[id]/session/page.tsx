@@ -199,6 +199,7 @@ function AudioVisualizerWrapper({ agentState }: { agentState: AgentState }) {
 
     const bufferLength = analyzer.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
+    let animationFrameId: number;
 
     const updateLevel = () => {
         analyzer.getByteFrequencyData(dataArray);
@@ -209,12 +210,13 @@ function AudioVisualizerWrapper({ agentState }: { agentState: AgentState }) {
         const average = sum / bufferLength;
         // Normalize to 0-1 range roughly
         setAudioLevel(Math.min(average / 100, 1));
-        requestAnimationFrame(updateLevel);
+        animationFrameId = requestAnimationFrame(updateLevel);
     };
 
-    updateLevel();
+    animationFrameId = requestAnimationFrame(updateLevel);
 
     return () => {
+        cancelAnimationFrame(animationFrameId);
         audioContext.close();
     };
   }, [audioTrack]);
