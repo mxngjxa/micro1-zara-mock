@@ -40,10 +40,10 @@ Before starting services, ensure environment variables are configured:
 
 ```bash
 # Backend - Create .env file (no .env.example exists in the repo)
-touch apps/backend/.env
+touch backend/.env
 
-# Add these required variables to apps/backend/.env:
-cat >> apps/backend/.env << 'EOF'
+# Add these required variables to backend/.env:
+cat >> backend/.env << 'EOF'
 NODE_ENV=development
 PORT=3000
 
@@ -75,7 +75,7 @@ FRONTEND_ORIGIN=http://localhost:3001
 EOF
 
 # Frontend - Create .env.local file
-cat >> apps/frontend/.env.local << 'EOF'
+cat >> frontend/.env.local << 'EOF'
 NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_WS_URL=ws://localhost:3000
 EOF
@@ -106,18 +106,14 @@ Run from the **repository root**:
 # Run database migrations
 npm run migration:run -w backend
 
-# Verify migrations applied successfully (optional)
-npx ts-node apps/backend/src/scripts/check-migrations.ts
+# Verify migrations applied successfully
+npx ts-node backend/src/scripts/check-migrations.ts
 
-# You can also verify tables were created (optional)
-npx ts-node apps/backend/src/scripts/check-tables.ts
-```
+# You can also verify tables were created
+npx ts-node backend/src/scripts/check-tables.ts
 
-**Note:** There is no `db:seed` script in the current project. To add seeding capability:
-
-```bash
 # Use the existing seed script manually
-npx ts-node apps/backend/src/scripts/seed.ts
+npx ts-node backend/src/scripts/seed.ts
 ```
 
 ### **3. Start Backend Service**
@@ -151,6 +147,16 @@ npm run dev:frontend
 # Frontend will be available at http://localhost:3001
 ```
 
+### **5. Start Livekit-Agent Service**
+
+Run from the **repository root** (in a new terminal):
+
+```bash
+# Start livekit python backend
+uv run python agent/agent.py dev
+```
+
+
 **Available frontend scripts:**
 - `dev` - Development mode with hot-reload
 - `build` - Production build
@@ -183,7 +189,7 @@ npm run dev:frontend
 
 6. **Test database connection** (optional):
    ```bash
-   npx ts-node apps/backend/src/scripts/test-db-connection.ts
+   npx ts-node backend/src/scripts/test-db-connection.ts
    ```
 
 ### **Troubleshooting**
@@ -197,7 +203,7 @@ npm run dev:frontend
 
 - **Database connection errors**: 
   - Verify Docker PostgreSQL is running: `docker compose ps`
-  - Check DATABASE_* variables in `apps/backend/.env` match docker-compose.yml
+  - Check DATABASE_* variables in `backend/.env` match docker-compose.yml
   - Default credentials: `postgres/postgres` on `localhost:5432`
 
 - **Migration errors**: 
@@ -210,20 +216,20 @@ npm run dev:frontend
 - **Workspace not found errors**:
   ```bash
   # Reinstall dependencies
-  rm -rf node_modules apps/*/node_modules
+  rm -rf node_modules */node_modules
   npm install
   ```
 
 - **Frontend build errors**: 
   ```bash
   # Clear Next.js cache
-  rm -rf apps/frontend/.next
+  rm -rf frontend/.next
   npm run dev:frontend
   ```
 
 - **Backend won't start**: Check for TypeScript errors
   ```bash
-  cd apps/backend
+  cd backend
   npx tsc --noEmit
   ```
 
