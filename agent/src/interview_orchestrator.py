@@ -80,7 +80,7 @@ class InterviewOrchestrator:
             
             self.questions = self.interview_data.get("questions", [])
             if not self.questions:
-                logger.error(f"No questions found in interview data")
+                logger.error("No questions found in interview data")
                 return False
             
             # Sort questions by order
@@ -314,7 +314,7 @@ class InterviewOrchestrator:
     async def submit_answer(self, question_id: str, transcript: str, duration: float):
         """Submit answer to backend for evaluation."""
         if len(transcript) < MIN_TRANSCRIPT_LENGTH:
-            logger.warning(f"Skipping submission - transcript too short")
+            logger.warning("Skipping submission - transcript too short")
             return
         
         logger.info(f"Submitting answer: {len(transcript)} chars, {duration:.1f}s")
