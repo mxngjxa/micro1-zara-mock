@@ -18,7 +18,9 @@ export default function InterviewsListPage() {
 
   useEffect(() => {
     // In a real app, we'd pass the status filter to the API
-    fetchUserInterviews();
+    fetchUserInterviews().catch(() => {
+      // Error already stored in interview state
+    });
   }, [fetchUserInterviews]);
 
   const filteredInterviews = interviews.filter(interview => {
