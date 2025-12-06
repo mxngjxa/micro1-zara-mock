@@ -1847,7 +1847,6 @@ Phase 3 will focus on:
 
 
 
-Based on the paste.txt content, here's the adapted **PROMPT 3** for Python Engineer using **uv** instead of pip:
 
 ***
 
@@ -1863,7 +1862,7 @@ You're building the voice AI agent that conducts interviews. The agent connects 
 - **LiveKit**: livekit-agents[google] for Gemini Live API integration
 - **Audio**: livekit-plugins-silero for turn detection
 - **HTTP**: httpx for NestJS API calls
-- **Python**: 3.10+ with async/await
+- **Python**: 3.13+ with async/await
 - **Package Manager**: uv (modern Python package and project manager)
 
 ***
@@ -1897,7 +1896,7 @@ cd agent
 uv init --name interview-agent --lib
 
 # Set Python version
-echo "3.12" > .python-version
+echo "3.13" > .python-version
 
 # Create virtual environment automatically managed by uv
 uv venv
@@ -1911,7 +1910,7 @@ name = "interview-agent"
 version = "0.1.0"
 description = "LiveKit Interview Agent with Gemini Live API"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "livekit-agents[google]>=0.8.0",
     "livekit-plugins-silero>=0.6.0",
@@ -2392,7 +2391,7 @@ Python agent for conducting voice-based technical interviews using LiveKit and G
 
 ## Prerequisites
 
-- Python 3.10+ (recommended: 3.12)
+- Python 3.13+ (recommended: 3.13)
 - [uv](https://github.com/astral-sh/uv) - Modern Python package manager
 
 ## Setup
