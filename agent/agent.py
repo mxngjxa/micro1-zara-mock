@@ -44,16 +44,15 @@ async def entrypoint(ctx: agents.JobContext):
         logger.info(f"Connected to room {ctx.room.name}")
         
         # Create AgentSession with Google components
+        # Note: livekit-plugins-google reads GOOGLE_API_KEY from environment automatically
         session = AgentSession(
-            stt=google.STT(api_key=config.google_api_key),
+            stt=google.STT(),  # Uses GOOGLE_API_KEY env var
             llm=google.LLM(
                 model=config.gemini_model,
-                api_key=config.google_api_key,
                 temperature=config.gemini_temperature,
             ),
             tts=google.TTS(
-                api_key=config.google_api_key,
-                voice_name=config.gemini_voice,
+                voice=config.gemini_voice,
             ),
             vad=silero.VAD.load(
                 min_speech_duration=0.5,
