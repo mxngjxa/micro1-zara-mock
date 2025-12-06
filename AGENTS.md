@@ -106,16 +106,12 @@ Run from the **repository root**:
 # Run database migrations
 npm run migration:run -w backend
 
-# Verify migrations applied successfully (optional)
+# Verify migrations applied successfully
 npx ts-node apps/backend/src/scripts/check-migrations.ts
 
-# You can also verify tables were created (optional)
+# You can also verify tables were created
 npx ts-node apps/backend/src/scripts/check-tables.ts
-```
 
-**Note:** There is no `db:seed` script in the current project. To add seeding capability:
-
-```bash
 # Use the existing seed script manually
 npx ts-node apps/backend/src/scripts/seed.ts
 ```

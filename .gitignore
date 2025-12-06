@@ -28,7 +28,7 @@ yarn-error.log*
 next-env.d.ts
 # Nestjs specific
 /dist
-/apps/backend/dist
+/backend/dist
 /tmp
 # Logs
 logs
