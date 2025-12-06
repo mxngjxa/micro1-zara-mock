@@ -120,7 +120,16 @@ export class AnswersService {
     }
   }
 
-  async getAnswersByInterview(interviewId: string) {
+  async getAnswersByInterview(userId: string, interviewId: string) {
+    // Verify interview belongs to user
+    const interview = await this.interviewRepository.findOne({
+      where: { id: interviewId, user_id: userId },
+    });
+
+    if (!interview) {
+      throw new NotFoundException('Interview not found or access denied');
+    }
+
     return this.answerRepository.find({
       where: {
         question: {
@@ -134,14 +143,18 @@ export class AnswersService {
     });
   }
 
-  async getAnswerById(answerId: string) {
+  async getAnswerById(userId: string, answerId: string) {
     const answer = await this.answerRepository.findOne({
       where: { id: answerId },
-      relations: ['question'],
+      relations: ['question', 'question.interview'],
     });
 
     if (!answer) {
       throw new NotFoundException('Answer not found');
+    }
+
+    if (answer.question.interview.user_id !== userId) {
+      throw new NotFoundException('Answer not found or access denied');
     }
 
     return answer;

@@ -1,3 +1,4 @@
+import logging
 import os
 from dotenv import load_dotenv
 
@@ -18,7 +19,16 @@ class Config:
         self.google_api_key: str = self._get_required("GOOGLE_API_KEY")
         self.gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-tts")
         self.gemini_voice: str = os.getenv("GEMINI_VOICE", "Puck")
-        self.gemini_temperature: float = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
+        
+        try:
+            self.gemini_temperature: float = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
+        except (ValueError, TypeError) as e:
+            invalid_val = os.getenv("GEMINI_TEMPERATURE")
+            logging.warning(
+                f"Invalid GEMINI_TEMPERATURE value '{invalid_val}': {e}. "
+                f"Using default 0.7"
+            )
+            self.gemini_temperature = 0.7
         
         # NestJS API
         self.nestjs_api_url: str = self._get_required("NESTJS_API_URL")

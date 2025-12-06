@@ -27,6 +27,8 @@ class InterviewOrchestrator:
         self.interview_id: Optional[str] = None
         self.answer_start_time: Optional[datetime] = None
         self.current_transcript = ""
+        self._background_tasks = set()
+        self._processing_speech = False
     
     async def initialize(self) -> bool:
         """Fetch interview details from NestJS"""
@@ -131,13 +133,20 @@ class InterviewOrchestrator:
         
         # Note: You'll need to implement transcript capture
         # This is a simplified version
-        if self.current_transcript:
-            asyncio.create_task(
+        if self.current_transcript and not self._processing_speech:
+            self._processing_speech = True
+            
+            submit_task = asyncio.create_task(
                 self.handle_answer_submission(
                     question_id, self.current_transcript, duration
                 )
             )
-            asyncio.create_task(self.transition_to_next_question())
+            self._background_tasks.add(submit_task)
+            submit_task.add_done_callback(self._background_tasks.discard)
+
+            transition_task = asyncio.create_task(self.transition_to_next_question())
+            self._background_tasks.add(transition_task)
+            transition_task.add_done_callback(lambda t: self._cleanup_task_and_reset_speech_flag(t))
     
     async def on_user_speech_committed(self, transcript: str):
         """Store user transcript"""
@@ -155,11 +164,25 @@ class InterviewOrchestrator:
         question_id = question.get("id")
         
         # Submit answer and move to next question
-        asyncio.create_task(
-            self.handle_answer_submission(question_id, transcript, duration)
-        )
-        asyncio.create_task(self.transition_to_next_question())
+        if not self._processing_speech:
+            self._processing_speech = True
+
+            submit_task = asyncio.create_task(
+                self.handle_answer_submission(question_id, transcript, duration)
+            )
+            self._background_tasks.add(submit_task)
+            submit_task.add_done_callback(self._background_tasks.discard)
+            
+            transition_task = asyncio.create_task(self.transition_to_next_question())
+            self._background_tasks.add(transition_task)
+            transition_task.add_done_callback(lambda t: self._cleanup_task_and_reset_speech_flag(t))
     
+    def _cleanup_task_and_reset_speech_flag(self, task):
+        self._background_tasks.discard(task)
+        self._processing_speech = False
+        if task.exception():
+            logger.error(f"Background task failed: {task.exception()}", exc_info=task.exception())
+
     async def handle_answer_submission(
         self, question_id: str, transcript: str, duration: float
     ):
@@ -206,5 +229,5 @@ class InterviewOrchestrator:
         )
         try:
             await self.session.generate_reply(instructions=message)
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"Failed to generate error reply: {e}", exc_info=True)

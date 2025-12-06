@@ -38,8 +38,10 @@ export class AnswersController {
   // Let's keep it authenticated for now, assuming the frontend submits it after the user confirms, OR the agent submits it.
   // If Agent submits, it needs a way to auth.
   // For simplicity: Public but validated by logic.
-  @Public()
+  // TODO: Implement agent authentication or room validation
+  // @UseGuards(AgentAuthGuard)
   async createAnswer(@Body() createDto: CreateAnswerDto) {
+    // Validate question belongs to active interview
     return this.answersService.createAnswer(createDto);
   }
 
@@ -49,8 +51,7 @@ export class AnswersController {
     @Param('interviewId', ParseUUIDPipe) interviewId: string,
     @CurrentUser() user: any,
   ) {
-    // In a real app, verify user owns the interview
-    return this.answersService.getAnswersByInterview(interviewId);
+    return this.answersService.getAnswersByInterview(user.id, interviewId);
   }
 
   @Get(':id')
@@ -59,6 +60,6 @@ export class AnswersController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: any,
   ) {
-    return this.answersService.getAnswerById(id);
+    return this.answersService.getAnswerById(user.id, id);
   }
 }

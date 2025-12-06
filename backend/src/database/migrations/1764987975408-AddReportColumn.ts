@@ -20,7 +20,11 @@ export class AddReportColumn1764987975408 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "interviews" DROP COLUMN "report"`);
-    await queryRunner.query(`ALTER TABLE "questions" DROP COLUMN "updated_at"`);
+    if (await queryRunner.hasColumn('interviews', 'report')) {
+      await queryRunner.query(`ALTER TABLE "interviews" DROP COLUMN "report"`);
+    }
+    if (await queryRunner.hasColumn('questions', 'updated_at')) {
+      await queryRunner.query(`ALTER TABLE "questions" DROP COLUMN "updated_at"`);
+    }
   }
 }

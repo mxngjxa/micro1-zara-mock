@@ -29,6 +29,7 @@ class InterviewAgent(Agent):
             )
         )
         self.orchestrator = orchestrator
+        self._tasks = set()
 
 
 @server.rtc_session()
@@ -89,9 +90,11 @@ async def entrypoint(ctx: agents.JobContext):
         def on_user_input_transcribed(ev):
             # Called when user speech is transcribed
             if hasattr(ev, 'transcript') and ev.transcript:
-                asyncio.create_task(
+                task = asyncio.create_task(
                     orchestrator.on_user_speech_committed(ev.transcript)
                 )
+                agent._tasks.add(task)
+                task.add_done_callback(agent._tasks.discard)
         
         # Start the session
         await session.start(
