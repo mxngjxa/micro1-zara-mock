@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Question } from '@/types/interview.types';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function InterviewSessionPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -148,9 +149,12 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
               </div>
               <Progress value={(completedQuestions / (currentInterview?.total_questions || 10)) * 100} />
             </div>
-            <Button variant="destructive" size="sm" onClick={handleDisconnect}>
-              End Interview
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button variant="destructive" size="sm" onClick={handleDisconnect}>
+                End Interview
+              </Button>
+            </div>
           </div>
         </div>
       </header>

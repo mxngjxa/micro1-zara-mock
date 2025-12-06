@@ -1,8 +1,14 @@
 import logging
 import asyncio
 
-logging.basicConfig(level=logging.INFO)
+# Configure logging only if no handlers exist (avoid duplicate logs)
 logger = logging.getLogger(__name__)
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+logger.setLevel(logging.INFO)
 
 
 async def verify():
