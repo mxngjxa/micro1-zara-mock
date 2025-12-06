@@ -25,8 +25,11 @@ export class GeminiService {
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('GOOGLE_API_KEY');
-    const modelName = this.configService.get<string>('GEMINI_MODEL', 'gemini-1.5-flash');
-    
+    const modelName = this.configService.get<string>(
+      'GEMINI_MODEL',
+      'gemini-1.5-flash',
+    );
+
     if (!apiKey) {
       this.logger.error('GOOGLE_API_KEY not found in configuration');
       throw new Error('GOOGLE_API_KEY is required');
@@ -72,12 +75,12 @@ export class GeminiService {
         const response = result.response;
         const text = response.text();
         const questions = JSON.parse(text) as GeneratedQuestion[];
-        
+
         // Basic validation
         if (!Array.isArray(questions) || questions.length === 0) {
           throw new Error('Invalid response format from Gemini');
         }
-        
+
         return questions;
       });
     } catch (error) {
@@ -116,17 +119,17 @@ export class GeminiService {
         const response = result.response;
         const text = response.text();
         const evaluation = JSON.parse(text) as AnswerEvaluation;
-        
+
         // Calculate weighted score if not provided or to ensure consistency
         const weightedScore = Math.round(
-          (evaluation.correctness * 0.5) + 
-          (evaluation.completeness * 0.3) + 
-          (evaluation.clarity * 0.2)
+          evaluation.correctness * 0.5 +
+            evaluation.completeness * 0.3 +
+            evaluation.clarity * 0.2,
         );
-        
+
         return {
           ...evaluation,
-          score: weightedScore
+          score: weightedScore,
         };
       });
     } catch (error) {
@@ -135,24 +138,30 @@ export class GeminiService {
     }
   }
 
-  private async retryOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  private async retryOperation<T>(
+    operation: () => Promise<T>,
+    maxRetries = 3,
+  ): Promise<T> {
     let lastError: any;
-    
+
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error;
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         this.logger.warn(`Attempt ${i + 1} failed: ${errorMessage}`);
-        
+
         if (i < maxRetries - 1) {
           // Exponential backoff: 1s, 2s, 4s
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, i) * 1000),
+          );
         }
       }
     }
-    
+
     throw lastError;
   }
 }

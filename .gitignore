@@ -37,6 +37,7 @@ next-env.d.ts
 
 # Nestjs specific
 /dist
+/apps/backend/dist
 /node_modules
 /build
 /tmp

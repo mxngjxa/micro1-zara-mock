@@ -1,4 +1,10 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Answer } from '../database/entities/answer.entity';
@@ -61,7 +67,7 @@ export class AnswersService {
 
       // Save answer initially
       // Cast to any to avoid type issues with incomplete entity or missing properties in DeepPartial
-      let savedAnswer = await queryRunner.manager.save(Answer, answer) as any;
+      let savedAnswer = (await queryRunner.manager.save(Answer, answer)) as any;
 
       try {
         // Trigger evaluation using Gemini
@@ -84,25 +90,27 @@ export class AnswersService {
         // a low score implies confident in poor quality.
         // This is a placeholder logic.
         savedAnswer.confidence_score = evaluation.score >= 70 ? 0.8 : 0.6;
-        
+
         savedAnswer = await queryRunner.manager.save(Answer, savedAnswer);
       } catch (evalError) {
-        this.logger.error('Evaluation failed, saving answer without score', evalError);
+        this.logger.error(
+          'Evaluation failed, saving answer without score',
+          evalError,
+        );
         // We continue without failing the request, user can retry evaluation later or background job picks it up
       }
 
       // Update interview progress
       await queryRunner.manager.increment(
-        Interview, 
-        { id: question.interview_id }, 
-        'completed_questions', 
-        1
+        Interview,
+        { id: question.interview_id },
+        'completed_questions',
+        1,
       );
 
       await queryRunner.commitTransaction();
 
       return savedAnswer;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('Failed to create answer', error);

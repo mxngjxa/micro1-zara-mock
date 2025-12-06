@@ -6,7 +6,11 @@ export class CreateRoomDto {
   @IsString()
   roomName!: string;
 
-  @ApiProperty({ example: 300, description: 'Empty timeout in seconds', required: false })
+  @ApiProperty({
+    example: 300,
+    description: 'Empty timeout in seconds',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   @Min(60)

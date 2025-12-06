@@ -20,11 +20,16 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private configService: ConfigService
+    private configService: ConfigService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<{ user: any; tokens: AuthTokens }> {
-    const user = await this.usersService.create(registerDto.email, registerDto.password);
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ user: any; tokens: AuthTokens }> {
+    const user = await this.usersService.create(
+      registerDto.email,
+      registerDto.password,
+    );
     const tokens = await this.generateTokens(user.id, user.email);
 
     // Remove sensitive data
@@ -35,13 +40,16 @@ export class AuthService {
 
   async login(loginDto: LoginDto): Promise<{ user: any; tokens: AuthTokens }> {
     const user = await this.usersService.findByEmail(loginDto.email);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await this.usersService.validatePassword(user, loginDto.password);
-    
+    const isPasswordValid = await this.usersService.validatePassword(
+      user,
+      loginDto.password,
+    );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -59,7 +67,7 @@ export class AuthService {
 
   async refreshTokens(userId: string): Promise<AuthTokens> {
     const user = await this.usersService.findById(userId);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -69,7 +77,7 @@ export class AuthService {
 
   async validateUser(userId: string): Promise<any> {
     const user = await this.usersService.findById(userId);
-    
+
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -78,18 +86,21 @@ export class AuthService {
     return userWithoutPassword;
   }
 
-  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
+  private async generateTokens(
+    userId: string,
+    email: string,
+  ): Promise<AuthTokens> {
     const payload: JwtPayload = { sub: userId, email };
 
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_EXPIRATION')
+        expiresIn: this.configService.get('JWT_EXPIRATION'),
       }),
       this.jwtService.signAsync(payload, {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION')
-      })
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),
+      }),
     ]);
 
     return { access_token, refresh_token };

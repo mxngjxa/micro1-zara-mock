@@ -21,16 +21,20 @@ async function checkTables() {
   try {
     await dataSource.initialize();
     console.log('Connected to database.');
-    
+
     const queryRunner = dataSource.createQueryRunner();
     const tables = await queryRunner.query(`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public'
     `);
-    
-    console.log('Tables in database:', tables.map((t: any) => t.table_name));
-    
+    await queryRunner.release();
+
+    console.log(
+      'Tables in database:',
+      tables.map((t: any) => t.table_name),
+    );
+
     await dataSource.destroy();
   } catch (error) {
     console.error('Error checking tables:', error);

@@ -26,12 +26,12 @@ async function checkMigrations() {
     // Check migrations table
     runner = dataSource.createQueryRunner();
     const migrationsTableExists = await runner.hasTable('migrations');
-    
+
     if (migrationsTableExists) {
-        const migrations = await runner.query('SELECT * FROM migrations');
-        console.log('Executed migrations:', migrations);
+      const migrations = await runner.query('SELECT * FROM migrations');
+      console.log('Executed migrations:', migrations);
     } else {
-        console.log('Migrations table does not exist.');
+      console.log('Migrations table does not exist.');
     }
 
     // Check content tables
@@ -40,8 +40,10 @@ async function checkMigrations() {
         FROM information_schema.tables 
         WHERE table_schema = 'public'
     `);
-    console.log('Tables in database:', tables.map((t: any) => t.table_name));
-    
+    console.log(
+      'Tables in database:',
+      tables.map((t: any) => t.table_name),
+    );
   } catch (error) {
     console.error('Error checking migrations:', error);
     process.exitCode = 1;
