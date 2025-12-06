@@ -28,6 +28,7 @@ async function checkTables() {
       FROM information_schema.tables 
       WHERE table_schema = 'public'
     `);
+    await queryRunner.release();
 
     console.log(
       'Tables in database:',
