@@ -32,7 +32,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
                 passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ]),
             ignoreExpiration: false,
-            secretOrKey: secret
+            secretOrKey: secret,
         });
         this.configService = configService;
         this.authService = authService;

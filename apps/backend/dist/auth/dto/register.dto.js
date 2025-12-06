@@ -27,7 +27,7 @@ __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(8),
     (0, class_validator_1.Matches)(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-        message: 'Password must contain uppercase, lowercase, and number/special character'
+        message: 'Password must contain uppercase, lowercase, and number/special character',
     }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);

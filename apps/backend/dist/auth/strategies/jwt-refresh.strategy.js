@@ -30,7 +30,7 @@ let JwtRefreshStrategy = class JwtRefreshStrategy extends (0, passport_1.Passpor
                 passport_jwt_1.ExtractJwt.fromBodyField('refreshToken'),
             ]),
             ignoreExpiration: false,
-            secretOrKey: secret
+            secretOrKey: secret,
         });
         this.configService = configService;
     }

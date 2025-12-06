@@ -67,7 +67,7 @@ __decorate([
     __metadata("design:type", Date)
 ], User.prototype, "last_login", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => interview_entity_1.Interview, interview => interview.user),
+    (0, typeorm_1.OneToMany)(() => interview_entity_1.Interview, (interview) => interview.user),
     __metadata("design:type", Array)
 ], User.prototype, "interviews", void 0);
 exports.User = User = __decorate([

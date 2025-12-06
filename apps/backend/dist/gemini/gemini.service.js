@@ -96,12 +96,12 @@ let GeminiService = GeminiService_1 = class GeminiService {
                 const response = result.response;
                 const text = response.text();
                 const evaluation = JSON.parse(text);
-                const weightedScore = Math.round((evaluation.correctness * 0.5) +
-                    (evaluation.completeness * 0.3) +
-                    (evaluation.clarity * 0.2));
+                const weightedScore = Math.round(evaluation.correctness * 0.5 +
+                    evaluation.completeness * 0.3 +
+                    evaluation.clarity * 0.2);
                 return {
                     ...evaluation,
-                    score: weightedScore
+                    score: weightedScore,
                 };
             });
         }
@@ -121,7 +121,7 @@ let GeminiService = GeminiService_1 = class GeminiService {
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 this.logger.warn(`Attempt ${i + 1} failed: ${errorMessage}`);
                 if (i < maxRetries - 1) {
-                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                    await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000));
                 }
             }
         }

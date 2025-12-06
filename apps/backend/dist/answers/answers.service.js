@@ -62,7 +62,7 @@ let AnswersService = AnswersService_1 = class AnswersService {
                 evaluation_json: null,
                 confidence_score: 0,
             });
-            let savedAnswer = await queryRunner.manager.save(answer_entity_1.Answer, answer);
+            let savedAnswer = (await queryRunner.manager.save(answer_entity_1.Answer, answer));
             try {
                 const evaluation = await this.geminiService.evaluateAnswer(question.content, question.expected_answer, createDto.transcript);
                 savedAnswer.score = evaluation.score;

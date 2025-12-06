@@ -54,5 +54,7 @@ async function testConnection() {
         console.error('Error connecting to the database:', error);
     }
 }
-testConnection();
+(async () => {
+    await testConnection();
+})();
 //# sourceMappingURL=test-db-connection.js.map

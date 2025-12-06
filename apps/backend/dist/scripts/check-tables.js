@@ -54,6 +54,7 @@ async function checkTables() {
       FROM information_schema.tables 
       WHERE table_schema = 'public'
     `);
+        await queryRunner.release();
         console.log('Tables in database:', tables.map((t) => t.table_name));
         await dataSource.destroy();
     }

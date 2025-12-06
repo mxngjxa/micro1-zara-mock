@@ -63,10 +63,12 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            throttler_1.ThrottlerModule.forRoot([{
+            throttler_1.ThrottlerModule.forRoot([
+                {
                     ttl: 60000,
-                    limit: 10
-                }]),
+                    limit: 10,
+                },
+            ]),
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
                 validationSchema: Joi.object({
@@ -82,9 +84,7 @@ exports.AppModule = AppModule = __decorate([
                     LOG_LEVEL: Joi.string()
                         .valid('error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly')
                         .default('info'),
-                    FRONTEND_ORIGIN: Joi.string()
-                        .uri()
-                        .default('http://localhost:3001'),
+                    FRONTEND_ORIGIN: Joi.string().uri().default('http://localhost:3001'),
                     JWT_SECRET: Joi.string().min(32).required(),
                     JWT_EXPIRATION: Joi.string().default('24h'),
                     JWT_REFRESH_SECRET: Joi.string().min(32).required(),
@@ -126,12 +126,12 @@ exports.AppModule = AppModule = __decorate([
             logger_service_1.LoggerService,
             {
                 provide: core_1.APP_GUARD,
-                useClass: throttler_1.ThrottlerGuard
+                useClass: throttler_1.ThrottlerGuard,
             },
             {
                 provide: core_1.APP_GUARD,
-                useClass: jwt_auth_guard_1.JwtAuthGuard
-            }
+                useClass: jwt_auth_guard_1.JwtAuthGuard,
+            },
         ],
         exports: [logger_service_1.LoggerService],
     })

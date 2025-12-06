@@ -69,7 +69,8 @@ async function seed() {
             console.log('Creating test user...');
             const user = new user_entity_1.User();
             user.email = email;
-            user.password_hash = '$2b$10$EpOssIKKr.q3z0jdQqxOT.y5/d.5c6.5.6.5.6.5.6.5.6.5.6';
+            user.password_hash =
+                '$2b$10$EpOssIKKr.q3z0jdQqxOT.y5/d.5c6.5.6.5.6.5.6.5.6.5.6';
             user.email_verified = true;
             user.created_at = new Date();
             user.updated_at = new Date();

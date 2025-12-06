@@ -57,7 +57,9 @@ let UsersService = class UsersService {
         this.usersRepository = usersRepository;
     }
     async create(email, password) {
-        const existingUser = await this.usersRepository.findOne({ where: { email } });
+        const existingUser = await this.usersRepository.findOne({
+            where: { email },
+        });
         if (existingUser) {
             throw new common_1.ConflictException('Email already registered');
         }
@@ -72,13 +74,28 @@ let UsersService = class UsersService {
     async findByEmail(email) {
         return this.usersRepository.findOne({
             where: { email },
-            select: ['id', 'email', 'password_hash', 'email_verified', 'created_at', 'updated_at', 'last_login']
+            select: [
+                'id',
+                'email',
+                'password_hash',
+                'email_verified',
+                'created_at',
+                'updated_at',
+                'last_login',
+            ],
         });
     }
     async findById(id) {
         return this.usersRepository.findOne({
             where: { id },
-            select: ['id', 'email', 'email_verified', 'created_at', 'updated_at', 'last_login']
+            select: [
+                'id',
+                'email',
+                'email_verified',
+                'created_at',
+                'updated_at',
+                'last_login',
+            ],
         });
     }
     async validatePassword(user, password) {

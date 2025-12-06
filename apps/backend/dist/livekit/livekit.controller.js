@@ -28,42 +28,42 @@ let LiveKitController = class LiveKitController {
         const token = await this.livekitService.generateToken({
             roomName: getTokenDto.roomName,
             participantName: user.email,
-            participantId: user.id
+            participantId: user.id,
         });
         return {
             success: true,
             data: {
                 token,
-                url: this.livekitService.getLiveKitUrl()
-            }
+                url: this.livekitService.getLiveKitUrl(),
+            },
         };
     }
     async createRoom(createRoomDto) {
         const room = await this.livekitService.createRoom(createRoomDto.roomName, createRoomDto.emptyTimeout);
         return {
             success: true,
-            data: room
+            data: room,
         };
     }
     async listRooms() {
         const rooms = await this.livekitService.listRooms();
         return {
             success: true,
-            data: rooms
+            data: rooms,
         };
     }
     async getRoomInfo(roomName) {
         const room = await this.livekitService.getRoomInfo(roomName);
         return {
             success: true,
-            data: room
+            data: room,
         };
     }
     async deleteRoom(roomName) {
         await this.livekitService.deleteRoom(roomName);
         return {
             success: true,
-            message: `Room ${roomName} deleted`
+            message: `Room ${roomName} deleted`,
         };
     }
 };

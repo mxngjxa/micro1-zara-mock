@@ -19,7 +19,7 @@ exports.LiveKitModule = LiveKitModule = __decorate([
         imports: [config_1.ConfigModule],
         providers: [livekit_service_1.LiveKitService],
         controllers: [livekit_controller_1.LiveKitController],
-        exports: [livekit_service_1.LiveKitService]
+        exports: [livekit_service_1.LiveKitService],
     })
 ], LiveKitModule);
 //# sourceMappingURL=livekit.module.js.map

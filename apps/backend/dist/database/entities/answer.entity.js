@@ -36,7 +36,9 @@ __decorate([
     __metadata("design:type", String)
 ], Answer.prototype, "question_id", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => question_entity_1.Question, question => question.answer, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.OneToOne)(() => question_entity_1.Question, (question) => question.answer, {
+        onDelete: 'CASCADE',
+    }),
     (0, typeorm_1.JoinColumn)({ name: 'question_id' }),
     __metadata("design:type", question_entity_1.Question)
 ], Answer.prototype, "question", void 0);

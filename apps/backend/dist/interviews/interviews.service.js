@@ -93,7 +93,7 @@ let InterviewsService = InterviewsService_1 = class InterviewsService {
         const token = await this.livekitService.generateToken({
             roomName,
             participantName,
-            participantId: userId
+            participantId: userId,
         });
         if (interview.status === 'PENDING') {
             interview.status = 'IN_PROGRESS';
@@ -127,13 +127,13 @@ let InterviewsService = InterviewsService_1 = class InterviewsService {
             interview_id: interview.id,
             job_role: interview.job_role,
             difficulty: interview.difficulty,
-            questions: interview.questions.map(q => ({
+            questions: interview.questions.map((q) => ({
                 id: q.id,
                 content: q.content,
                 difficulty: q.difficulty,
                 topic: q.topic,
                 order: q.order,
-                expected_answer: q.expected_answer
+                expected_answer: q.expected_answer,
             })),
             completed_questions: interview.completed_questions,
             status: interview.status,
@@ -150,7 +150,7 @@ let InterviewsService = InterviewsService_1 = class InterviewsService {
         let totalScore = 0;
         let answerCount = 0;
         const scores = [];
-        interview.questions.forEach(q => {
+        interview.questions.forEach((q) => {
             if (q.answer) {
                 if (q.answer.score !== null) {
                     totalScore += q.answer.score;
@@ -186,7 +186,8 @@ let InterviewsService = InterviewsService_1 = class InterviewsService {
         return interview;
     }
     async getUserInterviews(userId, status, page = 1, limit = 10) {
-        const query = this.interviewRepository.createQueryBuilder('interview')
+        const query = this.interviewRepository
+            .createQueryBuilder('interview')
             .where('interview.user_id = :userId', { userId })
             .orderBy('interview.created_at', 'DESC')
             .skip((page - 1) * limit)

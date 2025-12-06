@@ -40,7 +40,7 @@ __decorate([
     __metadata("design:type", String)
 ], Interview.prototype, "user_id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, user => user.interviews, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.interviews, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Interview.prototype, "user", void 0);
@@ -57,7 +57,11 @@ __decorate([
     __metadata("design:type", Array)
 ], Interview.prototype, "topics", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'], default: 'PENDING' }),
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'],
+        default: 'PENDING',
+    }),
     __metadata("design:type", String)
 ], Interview.prototype, "status", void 0);
 __decorate([
@@ -89,7 +93,9 @@ __decorate([
     __metadata("design:type", Date)
 ], Interview.prototype, "completed_at", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => question_entity_1.Question, question => question.interview, { cascade: true }),
+    (0, typeorm_1.OneToMany)(() => question_entity_1.Question, (question) => question.interview, {
+        cascade: true,
+    }),
     __metadata("design:type", Array)
 ], Interview.prototype, "questions", void 0);
 exports.Interview = Interview = __decorate([

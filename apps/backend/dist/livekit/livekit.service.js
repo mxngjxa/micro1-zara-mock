@@ -35,13 +35,13 @@ let LiveKitService = LiveKitService_1 = class LiveKitService {
         const token = new livekit_server_sdk_1.AccessToken(this.apiKey, this.apiSecret, {
             identity: options.participantId,
             name: options.participantName,
-            ttl: '1h'
+            ttl: '1h',
         });
         token.addGrant({
             roomJoin: true,
             room: options.roomName,
             canPublish: true,
-            canSubscribe: true
+            canSubscribe: true,
         });
         return token.toJwt();
     }
@@ -50,7 +50,7 @@ let LiveKitService = LiveKitService_1 = class LiveKitService {
             const room = await this.roomService.createRoom({
                 name: roomName,
                 emptyTimeout: emptyTimeout,
-                maxParticipants: 2
+                maxParticipants: 2,
             });
             return room;
         }

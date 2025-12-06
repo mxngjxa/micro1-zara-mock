@@ -46,7 +46,7 @@ let AuthController = class AuthController {
         this.setCookies(res, result.tokens.access_token, result.tokens.refresh_token);
         return {
             success: true,
-            data: { user: result.user }
+            data: { user: result.user },
         };
     }
     async login(loginDto, res) {
@@ -54,7 +54,7 @@ let AuthController = class AuthController {
         this.setCookies(res, result.tokens.access_token, result.tokens.refresh_token);
         return {
             success: true,
-            data: { user: result.user }
+            data: { user: result.user },
         };
     }
     async logout(res) {
@@ -62,7 +62,7 @@ let AuthController = class AuthController {
         res.clearCookie('refresh_token');
         return {
             success: true,
-            message: 'Logged out successfully'
+            message: 'Logged out successfully',
         };
     }
     async refresh(user, res) {
@@ -70,13 +70,13 @@ let AuthController = class AuthController {
         this.setCookies(res, tokens.access_token, tokens.refresh_token);
         return {
             success: true,
-            message: 'Tokens refreshed'
+            message: 'Tokens refreshed',
         };
     }
     async getProfile(user) {
         return {
             success: true,
-            data: user
+            data: user,
         };
     }
 };

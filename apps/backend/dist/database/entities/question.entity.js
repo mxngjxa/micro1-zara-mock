@@ -39,7 +39,9 @@ __decorate([
     __metadata("design:type", String)
 ], Question.prototype, "interview_id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => interview_entity_1.Interview, interview => interview.questions, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.ManyToOne)(() => interview_entity_1.Interview, (interview) => interview.questions, {
+        onDelete: 'CASCADE',
+    }),
     (0, typeorm_1.JoinColumn)({ name: 'interview_id' }),
     __metadata("design:type", interview_entity_1.Interview)
 ], Question.prototype, "interview", void 0);
@@ -84,7 +86,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Question.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => answer_entity_1.Answer, answer => answer.question, { cascade: true }),
+    (0, typeorm_1.OneToOne)(() => answer_entity_1.Answer, (answer) => answer.question, { cascade: true }),
     __metadata("design:type", answer_entity_1.Answer)
 ], Question.prototype, "answer", void 0);
 exports.Question = Question = __decorate([

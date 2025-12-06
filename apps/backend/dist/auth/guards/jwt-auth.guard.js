@@ -23,7 +23,7 @@ let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
     canActivate(context) {
         const isPublic = this.reflector.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [
             context.getHandler(),
-            context.getClass()
+            context.getClass(),
         ]);
         if (isPublic) {
             return true;

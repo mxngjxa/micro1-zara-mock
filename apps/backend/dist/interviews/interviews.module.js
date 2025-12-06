@@ -24,11 +24,11 @@ exports.InterviewsModule = InterviewsModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([interview_entity_1.Interview]),
             questions_module_1.QuestionsModule,
             gemini_module_1.GeminiModule,
-            livekit_module_1.LiveKitModule
+            livekit_module_1.LiveKitModule,
         ],
         controllers: [interviews_controller_1.InterviewsController],
         providers: [interviews_service_1.InterviewsService],
-        exports: [interviews_service_1.InterviewsService]
+        exports: [interviews_service_1.InterviewsService],
     })
 ], InterviewsModule);
 //# sourceMappingURL=interviews.module.js.map
