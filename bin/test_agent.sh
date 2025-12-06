@@ -6,4 +6,4 @@ echo "Using uv for dependency management..."
 
 cd agent
 uv sync  # Ensure dependencies are installed
-uv run python -m src.agent dev  # Run as module, not script
+uv run python agent/agent.py dev

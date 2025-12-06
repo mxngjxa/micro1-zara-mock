@@ -276,7 +276,7 @@ export class InterviewsService {
     const query = this.interviewRepository
       .createQueryBuilder('interview')
       .where('interview.user_id = :userId', { userId })
-      .orderBy('interview.created_at', 'DESC')
+      .orderBy('interview.started_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

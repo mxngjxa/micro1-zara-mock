@@ -30,7 +30,7 @@ async def verify():
         logger.warning(f"⚠ room_io import failed (may be optional): {e}")
     
     try:
-        from src.agent import entrypoint
+        from agent.agent import entrypoint
         from src.config import config
         from src.api_client import NestJSClient
         from src.interview_orchestrator import InterviewOrchestrator
