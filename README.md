@@ -2,16 +2,26 @@
 
 Essentiall, a mid clone of `micro1`'s zara ai interview agent.
 
+<div align="center">
+
 ![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16.0.7-000000?logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![NestJS](https://img.shields.io/badge/NestJS-11.0-E0234E?logo=nestjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
-![LiveKit](https://img.shields.io/badge/LiveKit-WebRTC-00A1E0?logo=livekit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+
+![LiveKit](https://img.shields.io/badge/LiveKit-WebRTC-00A1E0?logo=livekit&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Gemini-Live_API-4285F4?logo=google&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Deepgram](https://img.shields.io/badge/Deepgram-STT/TTS-13EF93?logo=deepgram&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-000000?logo=jsonwebtokens&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)
+
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?logo=node.js&logoColor=white)
+
+</div>
 
 A production-grade, voice-first AI interview platform that conducts technical interviews through natural conversation using **LiveKit's Agent Platform** and **Google Gemini Live API**. This system provides real-time speech interaction, AI-driven question generation, adaptive difficulty adjustment, and comprehensive interview evaluation.
 
