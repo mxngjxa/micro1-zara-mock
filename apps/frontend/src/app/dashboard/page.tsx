@@ -31,10 +31,9 @@ function DashboardContent() {
   // Calculate stats
   const totalInterviews = interviews.length;
   const completedInterviews = interviews.filter(i => i.status === 'COMPLETED').length;
+  const scoredInterviews = interviews.filter(i => i.status === 'COMPLETED' && i.overall_score);
   const averageScore = completedInterviews > 0
-    ? Math.round(interviews
-        .filter(i => i.status === 'COMPLETED' && i.overall_score)
-        .reduce((acc, curr) => acc + (curr.overall_score || 0), 0) / completedInterviews)
+    ? Math.round(scoredInterviews.reduce((acc, curr) => acc + (curr.overall_score || 0), 0) / (scoredInterviews.length || 1))
     : 0;
 
   return (
