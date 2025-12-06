@@ -4,12 +4,16 @@ from livekit import agents
 from livekit.agents import AgentSession, Agent
 from livekit.agents.voice import room_io
 from livekit.plugins import google, silero, noise_cancellation
-from .config import config
-from .api_client import NestJSClient
-from .interview_orchestrator import InterviewOrchestrator
+# Change relative imports to absolute
+from src.config import config
+from src.api_client import NestJSClient
+from src.interview_orchestrator import InterviewOrchestrator
+
 
 logging.basicConfig(level=config.log_level)
 logger = logging.getLogger(__name__)
+
+server = agents.AgentServer()
 
 
 class InterviewAgent(Agent):
@@ -27,6 +31,7 @@ class InterviewAgent(Agent):
         self.orchestrator = orchestrator
 
 
+@server.rtc_session()
 async def entrypoint(ctx: agents.JobContext):
     """Main agent entry point - called when agent joins a room"""
     logger.info(f"Agent joining room {ctx.room.name}")
@@ -119,17 +124,5 @@ async def entrypoint(ctx: agents.JobContext):
         await nestjs_client.close()
         logger.info("Interview agent session ended")
 
-
-def main():
-    agents.cli.run_app(
-        agents.WorkerOptions(
-            entrypoint_fnc=entrypoint,
-            ws_url=config.livekit_url,
-            api_key=config.livekit_api_key,
-            api_secret=config.livekit_api_secret,
-        )
-    )
-
-
 if __name__ == "__main__":
-    main()
+    agents.cli.run_app(server)

@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from typing import Optional, Any
 
-from .api_client import NestJSClient
+from src.api_client import NestJSClient
 
 logger = logging.getLogger(__name__)
 
